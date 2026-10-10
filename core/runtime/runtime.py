@@ -208,6 +208,17 @@ class Runtime:
         if self.kernel:
             self.kernel.boot()
 
+        # Reconcile stale mission checkpoints before starting the durable queue worker.
+        # This never auto-approves or replays a mission; unapproved actions stay unapproved.
+        try:
+            from core.autonomy.mission_engine import mission_engine
+            recovery = mission_engine.recover_interrupted_missions()
+            if any(recovery.values()):
+                dgm_logger.warning(f"Runtime: Mission startup reconciliation: {recovery}")
+        except Exception as exc:
+            self.is_degraded = True
+            dgm_logger.error(f"Runtime: Mission startup reconciliation failed: {type(exc).__name__}: {exc}")
+
         # Start SafeActionQueue consumer
         try:
             queue = SafeActionQueue()
