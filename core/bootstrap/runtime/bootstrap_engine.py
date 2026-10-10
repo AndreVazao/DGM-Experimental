@@ -133,6 +133,10 @@ class BootstrapEngine:
     def _prepare_federation(self):
         self._trace(f"TRACE_IMPORT:core.federation.federation_engine")
         DependencyLoader.validate_dependency("core.federation.federation_engine")
+        federation_enabled = os.getenv("DGM_FEDERATION_ENABLED", "0").strip().casefold() in {"1", "true", "yes", "on"}
+        if not federation_enabled:
+            self._trace("FEDERATION_SKIPPED_LOCAL_ONLY")
+            return
         try:
             from core.federation.node_identity import local_node
             from core.federation.rendezvous_client import RendezvousClient
