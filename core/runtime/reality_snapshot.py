@@ -184,17 +184,27 @@ class RealitySnapshotService:
 
     def _scan_installed_providers(self) -> List[str]:
         providers_dir = self.base_dir / "core" / "providers"
-        installed = []
+        installed = set()
         if providers_dir.exists():
             try:
                 for entry in providers_dir.iterdir():
-                    if entry.is_dir() and not entry.name.startswith("__"):
-                        provider_file = entry / f"{entry.name}_provider.py"
-                        if provider_file.exists():
-                            installed.append(entry.name)
+                    if not entry.is_dir() or entry.name.startswith("__"):
+                        continue
+
+                    # Legacy provider packages use <folder>/<folder>_provider.py.
+                    provider_file = entry / f"{entry.name}_provider.py"
+                    if provider_file.is_file():
+                        installed.add(entry.name)
+
+                    # Local providers may be adapters under core/providers/local,
+                    # e.g. ollama_adapter.py. Report the provider name, not "local".
+                    for adapter_file in entry.glob("*_adapter.py"):
+                        provider_name = adapter_file.stem[:-len("_adapter")]
+                        if provider_name:
+                            installed.add(provider_name)
             except PermissionError:
                 pass
-        return installed
+        return sorted(installed)
 
     def _get_cloned_repos(self) -> List[str]:
         repos = []

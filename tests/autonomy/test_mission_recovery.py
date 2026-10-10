@@ -54,3 +54,35 @@ def test_stale_running_mission_with_explicitly_approved_action_is_not_rewritten(
     assert mission.status is MissionStatus.RUNNING
     assert engine.action_queue.get_action(action_id)["status"] == "APPROVED"
     assert engine.action_queue.get_action(action_id)["is_approved"] is True
+
+
+def test_queued_and_approval_pending_missions_do_not_timeout_from_creation_time(tmp_path, monkeypatch):
+    import pytest
+
+    engine = MissionEngine()
+    engine.missions_path = tmp_path
+    engine.active_missions = {}
+    old = datetime.now() - timedelta(minutes=10)
+
+    for status in (MissionStatus.QUEUED, MissionStatus.APPROVAL_PENDING):
+        mission_id = f"waiting-{status.value.lower()}-timeout-regression"
+        mission = Mission(
+            mission_id=mission_id,
+            goal="Waiting mission timeout regression",
+            description="Must wait for worker or approval without timing out",
+            status=status,
+            created_at=old,
+            updated_at=old,
+        )
+        engine.active_missions[mission_id] = mission
+
+    monkeypatch.setattr(
+        engine,
+        "_timeout_mission",
+        lambda mission, reason: pytest.fail(f"waiting mission timed out: {mission.mission_id}"),
+    )
+
+    engine.process_missions()
+
+    assert engine.active_missions["waiting-queued-timeout-regression"].status is MissionStatus.QUEUED
+    assert engine.active_missions["waiting-approval_pending-timeout-regression"].status is MissionStatus.APPROVAL_PENDING

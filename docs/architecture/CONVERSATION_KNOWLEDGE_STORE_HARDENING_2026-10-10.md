@@ -188,3 +188,13 @@ Validation after this addition: the selected regression suite (`conversation_int
 - Follow-up data-quality gap: provider API currently reports installed=false but loaded=true for Ollama. The source scanner searches for folder-named *_provider.py files and does not recognize core/providers/local/ollama_adapter.py. This is separate from availability truth; do not claim installed metadata is correct until scanner coverage and a regression test are added.
 - Focused tests passed with exit code 0: tests/runtime/test_reality_snapshot.py, tests/providers/test_ollama_adapter.py, tests/unit/test_provider_api_truth.py. py_compile and git diff --check passed before commit e55eceb.
 - No GitHub push, PR merge, Actions run, queue mutation or log truncation. The AndreOS-Memory checkpoint update below is local-only; repository Git refs/history remain divergent.
+
+## 17. Provider inventory and mission timeout regression — 2026-10-10
+
+- Provider scanner fix now recognizes both legacy provider packages and adapter modules such as core/providers/local/ollama_adapter.py; adapter inventory reports ollama, not the implementation folder local.
+- Regression added for a temporary provider tree containing both adapter and legacy package forms.
+- Confirmed a mission lifecycle defect in process_missions(): the generic 60-second timeout was evaluated for every non-terminal mission except WAITING_FOR_USER, including QUEUED and APPROVAL_PENDING. These states can legitimately wait for an operator or queue worker and must not consume execution time from created_at.
+- Read-only audit of 555 durable mission checkpoints found 481 failures with “Mission timed out before execution completed.” Sampled records had no execution_started_at; logs included missions that had only reached QUEUED or whose durable action was approved but whose execution checkpoint had not started. This is strong evidence that the timeout guard was failing waiting missions before actual execution. Other historical failures include 69 invalid/too-short goals and two distinct one-off causes; no records were rewritten.
+- Fix scopes the general execution-time budget to RUNNING missions only. QUEUED and APPROVAL_PENDING no longer fail just because creation time is old; active RUNNING missions retain the existing 60-second guard.
+- Regression test exercises aged QUEUED and APPROVAL_PENDING missions and asserts neither is timed out. Provider/runtime/API/mission-recovery focused suite passed (21 tests; exit code 0); Python compilation and git diff --check passed.
+- Changes are local-only pending commit and safe live adoption. No mission/action row was mutated, no auto-approval/replay occurred, no GitHub push or Actions run.

@@ -153,3 +153,17 @@ def test_lazy_provider_health_preserves_existing_observation_without_new_probe(m
     assert records[0]["healthy"] is True
     assert records[0]["health_observed_at"] == observed_at
     assert records[0]["latency"] == 12.0
+
+def test_installed_provider_scan_detects_local_adapter_and_legacy_package(tmp_path):
+    providers_dir = tmp_path / "core" / "providers"
+    local_dir = providers_dir / "local"
+    legacy_dir = providers_dir / "legacy"
+    local_dir.mkdir(parents=True)
+    legacy_dir.mkdir(parents=True)
+    (local_dir / "ollama_adapter.py").write_text("# local adapter\n", encoding="utf-8")
+    (legacy_dir / "legacy_provider.py").write_text("# legacy provider\n", encoding="utf-8")
+
+    service = RealitySnapshotService(workspace_root=str(tmp_path))
+    service.base_dir = tmp_path
+
+    assert service._scan_installed_providers() == ["legacy", "ollama"]

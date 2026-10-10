@@ -607,16 +607,19 @@ class MissionEngine:
                 # Human waits persist on disk and never occupy the scheduler or time out.
                 continue
 
-            # Measure running work from its execution checkpoint, not creation time.
-            timeout_origin = mission.created_at
-            if mission.status == MissionStatus.RUNNING and mission.metadata.get("execution_started_at"):
-                try:
-                    timeout_origin = datetime.fromisoformat(mission.metadata["execution_started_at"])
-                except (TypeError, ValueError):
-                    timeout_origin = mission.created_at
-            if datetime.now() - timeout_origin > self.timeout_threshold:
-                self._timeout_mission(mission, "Mission timed out before execution completed.")
-                continue
+            # Only actively executing missions consume the execution-time budget.
+            # QUEUED and APPROVAL_PENDING may wait indefinitely for an operator or
+            # worker and must not fail merely because their creation time is old.
+            if mission.status == MissionStatus.RUNNING:
+                timeout_origin = mission.created_at
+                if mission.metadata.get("execution_started_at"):
+                    try:
+                        timeout_origin = datetime.fromisoformat(mission.metadata["execution_started_at"])
+                    except (TypeError, ValueError):
+                        timeout_origin = mission.created_at
+                if datetime.now() - timeout_origin > self.timeout_threshold:
+                    self._timeout_mission(mission, "Mission timed out before execution completed.")
+                    continue
 
             # 2. Lifecycle Transitions
             if mission.status == MissionStatus.CREATED:
