@@ -445,9 +445,11 @@ class MissionEngine:
                 dgm_logger.info(f"MISSION_EXECUTION_STARTED: {mission_id}")
                 dgm_logger.info(f"MissionEngine: Queue execution triggered for {mission_id}")
                 mission.logs.append("Action approved in SafeActionQueue. Starting execution.")
+                # Start the execution clock only after explicit queue approval. This
+                # applies to every mission path, not just repository-listing missions.
+                self._mark_execution_started(mission)
 
                 if "lista" in mission.goal.lower() and "repos" in mission.goal.lower():
-                    self._mark_execution_started(mission)
                     result = self._execute_list_repositories_mission(mission)
                     self._finish_mission_success(mission, result)
                     return result

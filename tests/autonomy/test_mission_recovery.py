@@ -86,3 +86,32 @@ def test_queued_and_approval_pending_missions_do_not_timeout_from_creation_time(
 
     assert engine.active_missions["waiting-queued-timeout-regression"].status is MissionStatus.QUEUED
     assert engine.active_missions["waiting-approval_pending-timeout-regression"].status is MissionStatus.APPROVAL_PENDING
+
+def test_queue_execution_starts_execution_clock_for_non_repository_mission(tmp_path, monkeypatch):
+    engine = MissionEngine()
+    engine.missions_path = tmp_path
+    engine.active_missions = {}
+    created_at = datetime.now() - timedelta(days=3)
+    mission = Mission(
+        mission_id="approved-old-mission-start-clock-regression",
+        goal="Build a small local feature",
+        description="Test execution start clock after approval",
+        status=MissionStatus.QUEUED,
+        created_at=created_at,
+        updated_at=created_at,
+    )
+    engine.active_missions[mission.mission_id] = mission
+
+    def observe_decomposition(mission_id):
+        assert mission_id == mission.mission_id
+        assert mission.metadata.get("execution_started_at")
+        assert mission.status is MissionStatus.RUNNING
+        return []
+
+    monkeypatch.setattr(engine, "decompose_mission", observe_decomposition)
+
+    result = engine._handle_queue_execution({"mission_id": mission.mission_id})
+
+    assert result["status"] == "decomposed"
+    assert datetime.fromisoformat(mission.metadata["execution_started_at"]) > datetime.now() - timedelta(seconds=5)
+    assert mission.metadata["execution_timeout_seconds"] == engine.MISSION_EXECUTION_TIMEOUT_SECONDS

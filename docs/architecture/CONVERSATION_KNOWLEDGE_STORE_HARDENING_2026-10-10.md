@@ -198,3 +198,11 @@ Validation after this addition: the selected regression suite (`conversation_int
 - Fix scopes the general execution-time budget to RUNNING missions only. QUEUED and APPROVAL_PENDING no longer fail just because creation time is old; active RUNNING missions retain the existing 60-second guard.
 - Regression test exercises aged QUEUED and APPROVAL_PENDING missions and asserts neither is timed out. Provider/runtime/API/mission-recovery focused suite passed (21 tests; exit code 0); Python compilation and git diff --check passed.
 - Changes are local-only pending commit and safe live adoption. No mission/action row was mutated, no auto-approval/replay occurred, no GitHub push or Actions run.
+
+## 18. Approved mission execution-clock coverage ? 2026-10-10
+
+- Follow-up inspection found a second timeout edge case: the queue handler set execution_started_at only for repository-listing goals. Other approved goals moved to RUNNING through decompose_mission without an execution timestamp, so their timeout could still fall back to the original creation time after a long approval wait.
+- Queue execution now records execution_started_at and execution_timeout_seconds for every explicitly approved mission before selecting its handler. Repository-listing missions no longer double-mark the start.
+- Regression uses an old QUEUED mission and verifies that the non-repository handler sees RUNNING plus a fresh execution timestamp before decomposition.
+- Focused recovery, mission-system, provider, runtime and API-truth tests passed (24 tests; exit code 0). Live Core had already adopted the waiting-state timeout fix; this follow-up clock fix still requires safe restart.
+- No durable action or historical mission record was changed; no replay, approval, push or Actions run.
