@@ -206,3 +206,11 @@ Validation after this addition: the selected regression suite (`conversation_int
 - Regression uses an old QUEUED mission and verifies that the non-repository handler sees RUNNING plus a fresh execution timestamp before decomposition.
 - Focused recovery, mission-system, provider, runtime and API-truth tests passed (24 tests; exit code 0). Live Core had already adopted the waiting-state timeout fix; this follow-up clock fix still requires safe restart.
 - No durable action or historical mission record was changed; no replay, approval, push or Actions run.
+
+## 19. Live adoption verified ? 2026-10-10
+- Commit 084c0c9 was loaded through a guarded hidden restart after read-only preflight verified 555 mission checkpoints, no RUNNING mission checkpoints, and zero APPROVED/RUNNING durable actions. Historical records and queue rows were not changed.
+- Live full runtime is healthy/non-degraded at 127.0.0.1:8181, PID 3480, with three initialized agents and the durable queue worker alive.
+- Live provider API now reports Ollama installed=true, loaded=true, healthy=true, available=true, status=ok, and fresh observation.
+- Post-restart counts are unchanged: 555 mission checkpoints (552 FAILED, 3 QUEUED); durable actions 787 QUEUED, 107 COMPLETED, 71 FAILED, 73 REJECTED; zero APPROVED/RUNNING.
+- runtime_activation.log remained exactly 1,399,575 bytes during an 8-second observation; no trace growth. Focused 24-test suite passed for the latest execution-clock patch; broader selected autonomy/runtime/provider/API-truth suite also passed before it.
+- Local commits only; no GitHub push, PR merge, Actions run, mission replay or queue mutation.
