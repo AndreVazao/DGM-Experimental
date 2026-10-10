@@ -92,3 +92,27 @@ Regression coverage:
 Validation after this addition: the selected regression suite (`conversation_intelligence`, `contracts`, `organization`, `autonomy`, `security`, `cockpit`) passed with exit code 0; `git diff --check` passed. The standard Git push initially failed because Windows Git Credential Manager could not persist credentials or prompt. The exact local implementation, tests and docs were published through the authorized GitHub contents interface, then the public feature branch was fetched anonymously, compared and aligned locally at `9987ece2328c39bf8ae496e4e429f141a3008f0c`. Local DGM-MAT worktree is clean and matches GitHub. Remote CI remains unverified.
 
 [executed on device: PC-Vazao-Anjos (982eb058-a42c-4897-9732-547f04cb44f0)]
+
+## 8. Local-first test isolation and provider authentication boundary ? 2026-10-10
+
+### Findings
+- The first unrestricted local full-suite run used the default persistent runtime database. The contract tests inserted test actions into the live action queue. The run was stopped as soon as the side effect was identified. Two exact queued rows created by that run (IDs 1035 and 1036, payload goals `contract boundary` and `result boundary`) were rejected through `SafeActionQueue.reject`, preserving an audit trail. The completed cross-process test action was retained; no bulk queue or mission cleanup was performed.
+- The runtime's API health endpoint returned HTTP 200, but the authenticated runtime snapshot reported status `starting`, 495 mission records (491 FAILED, 3 RUNNING, 1 QUEUED), and `worker_alive=false`. These records were not mass-mutated and the Core was not restarted.
+- The Claude Code CLI is installed but reports `loggedIn=false`; Ollama is not running/reachable. Neither tool was represented as available for inference.
+
+### Fixes
+- Added `tests/conftest.py`, which sets `DGM_STORAGE_PATH` and `DGM_BASE_PATH` to a disposable temporary root before importing project modules. Subprocess tests inherit the isolated environment. The storage default-path test now explicitly removes the test overrides only for its own assertion and restores them afterward.
+- Updated API integration tests to obtain short-lived test sessions rather than treating protected endpoints as public.
+- Provider-execution routes now delegate to their own dedicated API/operator bearer-token checks. This is necessary because a single HTTP Authorization header cannot simultaneously contain both the local-session token and the provider-specific token. Provider endpoints still fail closed when their own credentials are missing/invalid.
+
+### Validation and publication policy
+- Full local suite: `python -m pytest -q --disable-warnings` completed with exit code 0 using isolated temporary storage.
+- `git diff --check` passed.
+- No GitHub push, PR update, workflow dispatch, or Actions run was performed for these changes. They remain local-only until a workflow-safe synchronization path is agreed.
+- Core was not restarted; no external network binding was changed.
+
+### Next priorities
+1. Diagnose the runtime bootstrap/worker lifecycle and reconcile stale RUNNING mission records conservatively, without automatically re-running them.
+2. Make cockpit authentication/pairing work for the PC-local client while preserving the loopback-only bootstrap boundary; do not expose to Tailscale/LAN until separately authorized and tested.
+3. Establish a truthful local-inference readiness path. Do not assume Claude Code or Ollama is usable until authenticated/installed and verified; provide a deterministic no-model mode for inventory, memory retrieval, static checks and test execution.
+4. Continue running tests locally with isolated storage; never trigger GitHub Actions while the minute budget is constrained.
