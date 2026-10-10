@@ -112,3 +112,44 @@ def test_base_provider_check_does_not_become_observed_availability(monkeypatch):
     assert providers[0]["availability_observed"] is False
     assert provider.health_metrics["last_check"] == 0
     assert provider.health_metrics["last_check_attempt"] > 0
+
+
+
+def test_lazy_provider_health_preserves_existing_observation_without_new_probe(monkeypatch):
+    import time
+
+    service = RealitySnapshotService(workspace_root="/tmp")
+    provider = ProviderBase("ollama")
+    observed_at = time.time()
+    provider.health_metrics["status"] = "ok"
+    provider.health_metrics["last_check"] = observed_at
+    provider.health_metrics["latency"] = [12.0]
+    service.profile = SimpleNamespace(lazy_provider_health=True)
+
+    monkeypatch.setattr(service, "_scan_installed_providers", lambda: ["ollama"])
+    monkeypatch.setattr(
+        reality_snapshot_module.provider_registry,
+        "list_providers",
+        lambda: ["ollama"],
+    )
+    monkeypatch.setattr(
+        reality_snapshot_module.provider_registry,
+        "get_provider",
+        lambda name: provider,
+    )
+    monkeypatch.setattr(
+        provider,
+        "check_health",
+        lambda: pytest.fail("lazy mode must not start a new provider health probe"),
+    )
+
+    records = service._get_providers_status()
+
+    assert len(records) == 1
+    assert records[0]["name"] == "ollama"
+    assert records[0]["status"] == "ok"
+    assert records[0]["availability_observed"] is True
+    assert records[0]["available"] is True
+    assert records[0]["healthy"] is True
+    assert records[0]["health_observed_at"] == observed_at
+    assert records[0]["latency"] == 12.0

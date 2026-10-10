@@ -165,3 +165,16 @@ Validation after this addition: the selected regression suite (`conversation_int
 - Validation: `python -m py_compile main.py` passed; `git diff --check` passed. No full suite was run because this is a one-line removal from a logging-only loop.
 - The running process has already imported the previous version, so this source change takes effect only on a future safe restart. No restart was performed because the durable action queue/runtime safety state must be verified first.
 - Historical logs were not deleted or truncated. No queue/mission state was changed. No push, merge or GitHub Actions run was performed.
+
+
+## 15. Safe Core restart and provider-observation reconciliation — 2026-10-10
+
+- Authenticated read-only preflight confirmed the Core was healthy, all 555 mission checkpoint JSON files were present, and no durable action was in APPROVED or RUNNING state. Durable action counts before restart: 787 QUEUED, 107 COMPLETED, 71 FAILED, 73 REJECTED. The three QUEUED missions were linked to durable, unapproved queue actions 1023, 1033 and 1032. No action or mission was mutated to enable restart.
+- Restarted the headless Core hidden as PID 6256. Authenticated runtime status returned running, is_degraded=false, low-memory profile active; /health returned healthy.
+- Verified the trace-noise fix live: .runtime/runtime_activation.log remained exactly 1,398,972 bytes across an 8-second observation window. Tail contains only startup/ownership markers, not TRACE_LOOP_START:main.py. Historical log content was not truncated.
+- New regression finding: bootstrap's ProviderBase.broadcast_health() persisted an Ollama observation, but RealitySnapshotService._get_providers_status() replaced it with deferred/unobserved in low-memory mode, and runtime reconciliation then overwrote the truth-store record.
+- Local source fix now preserves a prior concrete health observation in lazy/low-memory mode without initiating a new probe; no observation still correctly reports deferred. Added regression test test_lazy_provider_health_preserves_existing_observation_without_new_probe.
+- Focused tests passed with exit code 0: tests/runtime/test_reality_snapshot.py, tests/providers/test_ollama_adapter.py, tests/unit/test_provider_api_truth.py. git diff --check passed before the new provider patch; rerun before commit.
+- The live Core has not yet loaded this latest provider-reconciliation fix. Restart only after the patch and documentation are committed and the same durable-state safety gate is reconfirmed.
+- Investigation also found 555 mission checkpoints (552 historical FAILED, 3 QUEUED); many sampled failures are timeout failures. This history is retained and is a separate follow-up; do not bulk retry, approve or delete.
+- No GitHub push, PR merge, workflow run, queue mutation or log truncation.
