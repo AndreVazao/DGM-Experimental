@@ -210,7 +210,7 @@ def start(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, mode: str = "api")
         "command": command,
     })
 
-    timeout = 60.0 if mode == "full" else 12.0
+    timeout = 180.0 if mode == "full" else 120.0
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         code = process.poll()
