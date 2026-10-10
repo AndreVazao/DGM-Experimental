@@ -37,6 +37,7 @@ class MissionEngine:
         self.missions_path = storage_manager.get_path("missions")
         self.missions_path.mkdir(parents=True, exist_ok=True)
         self.active_missions: Dict[str, Mission] = {}
+        self._loading_missions = False
         self.approval_manager = ApprovalManager()
         self.capability_scout = CapabilityScout()
         self.organization_bus = organization_bus or InternalMessageBus(
@@ -218,7 +219,16 @@ class MissionEngine:
         return counts
 
     def _load_missions(self):
-        """Restores missions from storage."""
+        """Restore mission checkpoints and publish one atomic snapshot."""
+        self._loading_missions = True
+        try:
+            self._load_missions_from_disk()
+        finally:
+            self._loading_missions = False
+            self._sync_missions_snapshot()
+
+    def _load_missions_from_disk(self):
+        """Read mission checkpoints without broadcasting every row while importing."""
         for mission_file in self.missions_path.glob("*.json"):
             try:
                 with open(mission_file, "r") as f:
@@ -1289,7 +1299,27 @@ class MissionEngine:
                 break
         return True
 
+    def _sync_missions_snapshot(self):
+        snapshot = {}
+        for mission in self.active_missions.values():
+            snapshot[mission.mission_id] = {
+                "id": mission.mission_id,
+                "mission_id": mission.mission_id,
+                "goal": mission.goal,
+                "status": mission.status.value,
+                "updated_at": datetime.now().isoformat(),
+                "progress": mission.progress,
+                "logs": mission.logs,
+                "error": mission.error,
+                "metadata": mission.metadata,
+                "result": mission.metadata.get("result"),
+                "output": mission.metadata.get("output"),
+            }
+        state_store.dispatch(StateEvents.MISSIONS_RECONCILED, snapshot)
+
     def _sync_state(self, mission: Mission):
+        if getattr(self, "_loading_missions", False):
+            return
         state_store.dispatch(StateEvents.MISSION_UPDATED, {
             "id": mission.mission_id,
             "mission_id": mission.mission_id,
