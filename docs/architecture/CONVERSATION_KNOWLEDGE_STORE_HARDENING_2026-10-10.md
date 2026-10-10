@@ -132,3 +132,12 @@ Validation after this addition: the selected regression suite (`conversation_int
 - A read-only runtime check then found `agents={}` despite `Runtime` constructing repo, provider and autonomy agents. Added explicit state-store registration for each constructed core agent with status `initialized`, role, implementation class and provider-required flag. This status intentionally does not claim external provider readiness. The regression test asserts all three core roles appear in the single cockpit truth store.
 - Full local pytest suite passed after startup/recovery changes. After the agent-visibility change, the full local suite is being rerun with isolated storage. No GitHub push or Actions workflow has been triggered.
 - The actual Windows Startup shortcut is now set to `backend_service.py start --mode full`; the live API-only process was stopped safely and replaced by the full headless runtime. Full-runtime service readiness and queue-worker heartbeat were verified on port 8181.
+
+## 11. Runtime startup reliability and final local verification ? 2026-10-10
+- Federation/rendezvous is now explicitly opt-in via DGM_FEDERATION_ENABLED=1. Default local boot skips outbound registration, avoiding a startup hang and preserving the local-only boundary.
+- Mission restoration now suppresses per-record state notifications and publishes one MISSIONS_RECONCILED snapshot after loading and human-handoff reconciliation. This avoids repeated full-state broadcasts for hundreds of mission files.
+- Full local pytest suite passed after these changes with isolated temporary storage. git diff --check passed. No GitHub push, PR update, or Actions workflow was triggered.
+- Live local runtime is running on 127.0.0.1:8181, is_degraded=false, with three core agents (core:repo, core:provider, core:autonomy) registered as initialized and the durable queue worker alive. The Windows Startup shortcut selects full mode.
+- Low-memory profile is active at 2.96 GB RAM; provider/autonomy startup scans remain deferred. Claude Code is installed but logged out; Ollama was not running/reachable at the last check. Verified local inference remains the next priority.
+- Queue safety remains manual: unapproved actions stay queued; no bulk approvals, deletions, or replay. Stale mission recovery preserves provenance and does not automatically replay work.
+\n\n
