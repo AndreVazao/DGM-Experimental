@@ -129,6 +129,12 @@ class BootstrapEngine:
     def _prepare_providers(self):
         self._trace(f"TRACE_IMPORT:core.providers.provider_registry")
         DependencyLoader.validate_dependency("core.providers.provider_registry")
+        from core.provider_sync.provider_registry import initialize_default_providers, provider_registry
+        initialize_default_providers()
+        local = provider_registry.get_provider("ollama")
+        if local is not None:
+            health = local.check_health()
+            self._trace(f"LOCAL_OLLAMA_STATUS:{health.get('status', 'unknown')} models={len(health.get('models', []))}")
 
     def _prepare_federation(self):
         self._trace(f"TRACE_IMPORT:core.federation.federation_engine")

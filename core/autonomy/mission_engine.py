@@ -1248,12 +1248,66 @@ class MissionEngine:
                 except OSError:
                     pass
 
+    def _build_local_subtasks(self, mission: Mission) -> List[SubTask] | None:
+        """Use a local model for a proposed plan; never executes the returned subtasks."""
+        if os.getenv("DGM_LOCAL_REASONING_ENABLED", "1").strip().casefold() in {"0", "false", "no", "off"}:
+            return None
+        try:
+            from core.provider_sync.provider_registry import initialize_default_providers, provider_registry
+            initialize_default_providers()
+            provider = provider_registry.get_provider("ollama")
+            if provider is None:
+                return None
+            goal = mission.goal.lower()
+            coder_terms = ("code", "repo", "repository", "script", "python", "bug", "implement", "software", "github", "file")
+            model = provider.config.get("coder_model") if any(term in goal for term in coder_terms) else provider.config.get("model")
+            messages = [
+                {"role": "system", "content": "You are a local planning assistant. Return only a JSON array with 3 to 5 objects, each with title and description strings. This is planning only: do not claim anything was executed; do not include shell commands, code, credentials, external calls, or paid services."},
+                {"role": "user", "content": "Create a small, verifiable task plan for this mission. Keep each step concrete, reversible, and testable. Mission: " + mission.goal[:3000]},
+            ]
+            raw = provider.generate(messages, model=model, json_mode=True, num_ctx=512, num_predict=128)
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                parsed = parsed.get("subtasks")
+            if not isinstance(parsed, list) or not 3 <= len(parsed) <= 5:
+                raise ValueError("local planner must return 3 to 5 subtasks")
+            subtasks = []
+            for item in parsed:
+                if not isinstance(item, dict):
+                    raise ValueError("local planner returned a non-object subtask")
+                title = item.get("title")
+                description = item.get("description")
+                if not isinstance(title, str) or not title.strip() or not isinstance(description, str) or not description.strip():
+                    raise ValueError("local planner returned an incomplete subtask")
+                subtasks.append(SubTask(
+                    subtask_id=f"st_{uuid4().hex[:4]}",
+                    title=title.strip()[:120],
+                    description=description.strip()[:1200],
+                ))
+            mission.metadata["local_planning"] = {
+                "status": "PROPOSED",
+                "provider": "ollama",
+                "model": model,
+                "created_at": datetime.now().isoformat(),
+                "automatic_subtask_execution": False,
+            }
+            mission.logs.append(f"Local model {model} proposed {len(subtasks)} subtasks; no subtask was executed automatically.")
+            return subtasks
+        except Exception as exc:
+            mission.metadata["local_planning"] = {
+                "status": "DETERMINISTIC_FALLBACK",
+                "reason": type(exc).__name__,
+                "automatic_subtask_execution": False,
+            }
+            dgm_logger.warning(f"LOCAL_PLANNER_FALLBACK: {type(exc).__name__}: {exc}")
+            return None
+
     def decompose_mission(self, mission_id: str) -> List[SubTask]:
         mission = self.active_missions.get(mission_id)
         if not mission or mission.status == MissionStatus.FAILED:
             return []
 
-        subtasks = [
+        subtasks = self._build_local_subtasks(mission) or [
             SubTask(subtask_id=f"st_{uuid4().hex[:4]}", title="Analyze requirements", description=f"Analyze {mission.goal}"),
             SubTask(subtask_id=f"st_{uuid4().hex[:4]}", title="Execute implementation", description=f"Implement changes for {mission.goal}"),
             SubTask(subtask_id=f"st_{uuid4().hex[:4]}", title="Verify results", description=f"Verify {mission.goal}")

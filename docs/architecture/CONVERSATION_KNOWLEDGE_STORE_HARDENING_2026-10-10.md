@@ -141,3 +141,11 @@ Validation after this addition: the selected regression suite (`conversation_int
 - Low-memory profile is active at 2.96 GB RAM; provider/autonomy startup scans remain deferred. Claude Code is installed but logged out; Ollama was not running/reachable at the last check. Verified local inference remains the next priority.
 - Queue safety remains manual: unapproved actions stay queued; no bulk approvals, deletions, or replay. Stale mission recovery preserves provenance and does not automatically replay work.
 \n\n
+
+## 12. Local Ollama provider and resource-safe planning ? 2026-10-10
+- Added a trusted local Ollama provider adapter and registered it first in provider priority. The adapter permits loopback HTTP only, lists installed models, supports bounded JSON-mode chat, and labels its cost profile local_zero_token. It never silently falls back to a remote provider.
+- The mission planner can ask the local model for 3?5 proposed subtasks, validates the JSON and stores planning provenance. It never executes generated subtasks automatically. If the server is unavailable, the response is invalid, or resource guards trip, the existing deterministic planner is used.
+- Ollama service helper and Startup shortcut now start the local server hidden on 127.0.0.1:11434, with the original shortcut backed up. The model server health check sees four installed models.
+- A real inference smoke test with llama3.2:1b did not return within 90 seconds on this 2.96 GB RAM machine. Ollama reported a 1.3 GB model at 100% CPU and free RAM dropped to 0.02 GB. The model was stopped; free RAM recovered to about 0.93 GB. No further generation attempt was made.
+- Added a 1.25 GB free-RAM guard and keep_alive=0. The planner now falls back quickly and deterministically instead of starving Windows; no paid API or remote provider is used as fallback. A stronger machine or more free RAM is needed to validate useful local inference latency.
+- Full local pytest suite passed with isolated temporary storage and no GitHub Actions run. Provider/planner focused tests also passed. Changes are local-only and not pushed.
