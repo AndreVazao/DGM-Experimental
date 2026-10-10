@@ -57,6 +57,20 @@ class Runtime:
         self.provider_agent = agents["provider"]
         self.autonomy_agent = agents["autonomy"]
 
+        # Publish constructed runtime agents to the single cockpit truth store.
+        # "initialized" is intentional: construction is not proof that a provider,
+        # external credential, or downstream capability is currently available.
+        for role, agent in agents.items():
+            self.state_store.dispatch(StateEvents.AGENT_STATUS_CHANGED, {
+                "id": f"core:{role}",
+                "name": role,
+                "role": role,
+                "status": "initialized",
+                "implementation": type(agent).__name__,
+                "provider_required": role == "provider",
+                "source": "core.runtime.Runtime",
+            })
+
         # Initialize advanced engines via late import
         if self.profile.low_memory:
             dgm_logger.info("Runtime: Low-memory profile defers advanced engine initialization.")
