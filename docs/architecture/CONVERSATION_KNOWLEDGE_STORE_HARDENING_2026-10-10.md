@@ -157,3 +157,11 @@ Validation after this addition: the selected regression suite (`conversation_int
 - Added regression coverage that checks the health observation is present in the state store.
 - Restarting the live Core is deliberately deferred: the runtime authenticated mission/action safety gate could not be completed reliably through the available runtime API. The source changes are local and tested, but live cockpit state will not reflect them until a separately verified safe restart.
 - No GitHub push, PR merge, workflow dispatch or Core restart performed.
+
+
+## 14. Main runtime loop trace-noise reduction — 2026-10-10
+- Removed the per-second `TRACE_LOOP_START:main.py` call from the `run_runtime()` keep-alive loop. The loop still sleeps once per second and retains the existing startup/ownership traces; runtime lifecycle behavior is otherwise unchanged.
+- Evidence: `.runtime/runtime_activation.log` had 52,612 lines (~1.37 MB), with the repeated loop marker at the end. This was unnecessary high-frequency disk and stdout logging.
+- Validation: `python -m py_compile main.py` passed; `git diff --check` passed. No full suite was run because this is a one-line removal from a logging-only loop.
+- The running process has already imported the previous version, so this source change takes effect only on a future safe restart. No restart was performed because the durable action queue/runtime safety state must be verified first.
+- Historical logs were not deleted or truncated. No queue/mission state was changed. No push, merge or GitHub Actions run was performed.
