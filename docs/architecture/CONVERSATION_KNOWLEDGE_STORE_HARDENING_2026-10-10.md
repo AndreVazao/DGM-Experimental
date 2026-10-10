@@ -214,3 +214,9 @@ Validation after this addition: the selected regression suite (`conversation_int
 - Post-restart counts are unchanged: 555 mission checkpoints (552 FAILED, 3 QUEUED); durable actions 787 QUEUED, 107 COMPLETED, 71 FAILED, 73 REJECTED; zero APPROVED/RUNNING.
 - runtime_activation.log remained exactly 1,399,575 bytes during an 8-second observation; no trace growth. Focused 24-test suite passed for the latest execution-clock patch; broader selected autonomy/runtime/provider/API-truth suite also passed before it.
 - Local commits only; no GitHub push, PR merge, Actions run, mission replay or queue mutation.
+
+## 20. Read-only overnight monitoring — 2026-10-10
+- Started hidden monitor process PID 5504 from AndreOS-Memory, with 15-minute samples until 08:00 local on 2026-10-11. It reads /health, host RAM/CPU, runtime process RSS/CPU, mission checkpoint statuses, SQLite safe_action_queue counts via mode=ro, and runtime trace size. It does not mutate the queue, missions, services, or power settings.
+- First sample at 22:08: health healthy; 928 MB available of 3033 MB, system CPU 57.7% at that instant, runtime RSS 25.9 MB and sampled CPU 0%, 555 mission checkpoints and action counts unchanged; trace log 1,399,575 bytes.
+- Attempted Claude Code Free CLI v2.1.112 in plan/read-only mode with only Read/Glob/Grep. It exited because CLI is not authenticated (“Not logged in; Please run /login”). No authentication files or tokens were touched. A separate preliminary report records this limitation and the verified evidence.
+- Morning follow-up: inspect the JSONL trend; do not infer performance from the first sample, and do not auto-retry/approve historical missions.
