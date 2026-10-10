@@ -69,3 +69,24 @@ def test_ollama_skips_inference_when_free_ram_is_below_safe_threshold(monkeypatc
             with pytest.raises(RuntimeError, match="No remote provider fallback"):
                 provider.generate([{"role": "user", "content": "plan"}], model="llama3.2:1b")
     urlopen.assert_not_called()
+
+def test_broadcast_health_persists_provider_observation_in_runtime_truth():
+    import time
+    from core.runtime.runtime_state_store import state_store
+    provider = OllamaProvider()
+    def healthy_observation():
+        now = time.time()
+        provider.health_metrics["status"] = "ok"
+        provider.health_metrics["last_check"] = now
+        provider.health_metrics["last_check_attempt"] = now
+        provider._installed_models = ["llama3.2:1b"]
+        return {"status": "ok", "available": True, "models": list(provider._installed_models)}
+    with patch.object(provider, "check_health", side_effect=healthy_observation):
+        provider.broadcast_health()
+    record = state_store.get_snapshot().providers["ollama"]
+    assert record["status"] == "ok"
+    assert record["available"] is True
+    assert record["healthy"] is True
+    assert record["installed"] is True
+    assert record["loaded"] is True
+    assert record["health_observed_at"] is not None

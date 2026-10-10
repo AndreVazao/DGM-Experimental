@@ -133,8 +133,8 @@ class BootstrapEngine:
         initialize_default_providers()
         local = provider_registry.get_provider("ollama")
         if local is not None:
-            health = local.check_health()
-            self._trace(f"LOCAL_OLLAMA_STATUS:{health.get('status', 'unknown')} models={len(health.get('models', []))}")
+            local.broadcast_health()
+            self._trace(f"LOCAL_OLLAMA_STATUS:{local.health_metrics.get('status', 'unknown')} models={len(getattr(local, '_installed_models', []))}")
 
     def _prepare_federation(self):
         self._trace(f"TRACE_IMPORT:core.federation.federation_engine")

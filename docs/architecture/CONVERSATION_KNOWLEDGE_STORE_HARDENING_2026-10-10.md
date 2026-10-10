@@ -149,3 +149,11 @@ Validation after this addition: the selected regression suite (`conversation_int
 - A real inference smoke test with llama3.2:1b did not return within 90 seconds on this 2.96 GB RAM machine. Ollama reported a 1.3 GB model at 100% CPU and free RAM dropped to 0.02 GB. The model was stopped; free RAM recovered to about 0.93 GB. No further generation attempt was made.
 - Added a 1.25 GB free-RAM guard and keep_alive=0. The planner now falls back quickly and deterministically instead of starving Windows; no paid API or remote provider is used as fallback. A stronger machine or more free RAM is needed to validate useful local inference latency.
 - Full local pytest suite passed with isolated temporary storage and no GitHub Actions run. Provider/planner focused tests also passed. Changes are local-only and not pushed.
+
+## 13. Provider health truth-store integration ? 2026-10-10
+- Full local test suite passed again after the provider changes (pytest exit code 0; 56.82 seconds; git diff --check passed). Tests used local temporary storage; no GitHub Actions workflow was triggered.
+- Found that ProviderBase.broadcast_health() previously emitted only a websocket message. That did not persist the provider observation into the runtime state store used as the cockpit current truth.
+- Updated provider health broadcasts to dispatch PROVIDER_UPDATED into state_store, including observed-at timestamps, installed/loaded, health/availability, freshness and provenance fields. Bootstrap now publishes the local Ollama health observation instead of only tracing it.
+- Added regression coverage that checks the health observation is present in the state store.
+- Restarting the live Core is deliberately deferred: the runtime authenticated mission/action safety gate could not be completed reliably through the available runtime API. The source changes are local and tested, but live cockpit state will not reflect them until a separately verified safe restart.
+- No GitHub push, PR merge, workflow dispatch or Core restart performed.
