@@ -178,3 +178,13 @@ Validation after this addition: the selected regression suite (`conversation_int
 - The live Core has not yet loaded this latest provider-reconciliation fix. Restart only after the patch and documentation are committed and the same durable-state safety gate is reconfirmed.
 - Investigation also found 555 mission checkpoints (552 historical FAILED, 3 QUEUED); many sampled failures are timeout failures. This history is retained and is a separate follow-up; do not bulk retry, approve or delete.
 - No GitHub push, PR merge, workflow run, queue mutation or log truncation.
+
+## 16. Live provider-truth verification after reconciliation fix — 2026-10-10
+
+- Committed provider-reconciliation fix e55eceb and restarted the headless Core hidden as PID 2000 after reconfirming 555 mission checkpoints and zero durable APPROVED/RUNNING actions. No mission/action rows were modified.
+- Authenticated runtime status after restart: running, non-degraded, LOW_MEMORY. Ollama now reports status=ok, available=true, availability_observed=true and freshness_status=fresh; the earlier deferred/unobserved overwrite is fixed in live runtime.
+- Post-restart mission state remains 555 total: 552 FAILED historical checkpoints and 3 QUEUED. Durable action counts remain 787 QUEUED, 107 COMPLETED, 71 FAILED, 73 REJECTED; no APPROVED/RUNNING actions.
+- Rechecked log suppression for 8 seconds: runtime_activation.log stayed at 1,399,173 bytes (growth 0); /health remained healthy.
+- Follow-up data-quality gap: provider API currently reports installed=false but loaded=true for Ollama. The source scanner searches for folder-named *_provider.py files and does not recognize core/providers/local/ollama_adapter.py. This is separate from availability truth; do not claim installed metadata is correct until scanner coverage and a regression test are added.
+- Focused tests passed with exit code 0: tests/runtime/test_reality_snapshot.py, tests/providers/test_ollama_adapter.py, tests/unit/test_provider_api_truth.py. py_compile and git diff --check passed before commit e55eceb.
+- No GitHub push, PR merge, Actions run, queue mutation or log truncation. The AndreOS-Memory checkpoint update below is local-only; repository Git refs/history remain divergent.
