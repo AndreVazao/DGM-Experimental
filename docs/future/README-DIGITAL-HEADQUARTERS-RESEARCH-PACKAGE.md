@@ -23,16 +23,25 @@ Este pacote preserva o conceito visual do escritório vivo, a investigação de 
    - Comparação de arquitetura, visual, integrações, recursos e licenças.
    - Recomendação de prova de conceito e plano incremental.
 
-4. [Wireframe SVG](assets/dgm-mat-digital-headquarters-wireframe.svg)
+4. [Runtime adaptável e agentes distribuídos](DGM-MAT-ADAPTIVE-RUNTIME-AND-DISTRIBUTED-WORKERS-2026-10-12.md)
+   - Perfis de renderização 3D, 2D avançado, 2D leve, boneco mínimo e chat sem animação.
+   - Adaptação ao hardware com medição, fallback, escolha manual e preservação do estado.
+   - Arquitetura para usar Harness, Claude Code, Ollama e ferramentas futuras em vários computadores autorizados.
+   - Gateway por nó, catálogo de capacidades, segurança da rede, política free/local-first e APIs pagas apenas com autorização.
+
+5. [Wireframe SVG](assets/dgm-mat-digital-headquarters-wireframe.svg)
    - Desenho vetorial de referência para a composição da interface.
    - É um wireframe ilustrativo; valores e eventos desenhados não representam dados reais do sistema.
 
 ## Decisões de segurança
 
 - DGM-MAT continua a ser o cérebro/orquestrador e fonte canónica de estado, memória, política e validação.
-- Harnesses externos são workers substituíveis.
+- Harnesses, ferramentas e computadores externos são workers substituíveis, nunca uma segunda fonte de verdade.
 - O escritório é uma projeção do estado real, não uma segunda autoridade.
+- A renderização adapta-se à máquina sem alterar as capacidades funcionais centrais.
 - Nenhuma percentagem, expedição, colaboração, recuperação ou conclusão pode ser inventada.
+- Nós remotos têm de ser inscritos e autorizados; estar na LAN não significa ser confiável.
+- Preferência inicial free/local-first; APIs pagas apenas depois de configuração e autorização explícitas.
 - Nenhuma instalação ou integração na máquina principal antes de medir recursos e testar isolamento.
 - Nenhum merge, rebase, reset ou sincronização foi realizado como parte deste pacote.
 
@@ -40,10 +49,12 @@ Este pacote preserva o conceito visual do escritório vivo, a investigação de 
 
 1. Auditoria read-only dos branches, working trees, commits locais e remotos.
 2. Preservar snapshots e reconciliar divergências conforme evidência.
-3. Auditar contratos, APIs, eventos e persistência atuais do DGM-MAT.
-4. Avaliar o Harness numa sandbox isolada e medir recursos.
-5. Prototipar a UI com dados mock; depois integrar read-only.
-6. Só depois decidir adoção, implementação e merge.
+3. Auditar contratos, APIs, eventos, providers, persistência e frontend atuais do DGM-MAT.
+4. Medir baseline do PC e definir perfil mínimo funcional.
+5. Avaliar um único Harness numa sandbox isolada, comparando-o com as ferramentas já disponíveis.
+6. Prototipar UI com dados mock; depois integrar read-only.
+7. Validar contrato de worker local antes de testar um segundo computador na rede privada.
+8. Só depois decidir adoção, implementação e merge.
 
 ## Fontes principais
 
