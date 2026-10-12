@@ -251,3 +251,34 @@ Não adotar vários agentes novos ao mesmo tempo. Escolher um único candidato e
 O DSH parece tecnicamente plausível como funcionário externo e substituível. A sua arquitetura de plugins é interessante, mas o seu estado de developer preview e as capacidades de execução exigem isolamento forte. O valor estratégico não está em substituir o DGM-MAT; está em permitir que o DGM-MAT delegue trabalho a ferramentas mais maduras, valide os resultados e converta sucessos verificados em melhorias documentadas.
 
 **Decisão proposta:** aprovar apenas investigação e prova de conceito isolada. Não instalar na máquina principal nem integrar em runtime de produção antes de recuperar a consistência dos repositórios e validar os critérios acima.
+
+
+## 13. Workers distribuídos em vários computadores
+
+A arquitetura deve permitir que um DGM-MAT central delegue tarefas a ferramentas instaladas em máquinas distintas e autorizadas — por exemplo, Harness num PC, Claude Code noutro e, futuramente, ferramentas locais, web ou API noutros nós. Não se deve ligar diretamente a lógica central às interfaces internas de cada ferramenta.
+
+Modelo proposto:
+
+```text
+DGM-MAT central (política, memória, despacho e validação)
+    -> catálogo de capacidades e estado dos nós
+    -> transporte privado autenticado e encriptado
+    -> gateway do nó / adaptador local
+    -> Harness | Claude Code | Ollama | outras ferramentas
+    -> artefactos, logs permitidos, diffs e resultados
+    -> validação central DGM-MAT
+```
+
+Cada nó é inscrito explicitamente e anuncia apenas capacidades aprovadas. O catálogo mantém versão, disponibilidade, recursos medidos, permissões e último heartbeat. Quando o heartbeat expira, o nó passa a indisponível/desconhecido; não se pode apresentar o seu estado antigo como disponibilidade atual.
+
+A rede local, por si só, não cria confiança. O primeiro protótipo deve usar um registo manual de nós, tarefas read-only e workspaces descartáveis. Exigir identidade individual por nó, transporte encriptado, autorização por tarefa, timeout/cancelamento, logs de auditoria, limites de recursos e revogação. Não expor agentes diretamente à Internet nem transmitir segredos ou toda a memória central. Resultados remotos são não confiáveis até serem validados pelo DGM-MAT.
+
+## 14. Renderização adaptável não altera o cérebro
+
+A renderização 3D/2D/mínima do escritório é uma preocupação separada do runtime de agentes. Um computador modesto deve continuar a poder usar o chat e uma personagem mínima mesmo sem capacidade para animação avançada. A adaptação visual não deve obrigar a instalar outro modelo, runtime de agente ou motor de jogo. O perfil de renderização e a seleção do worker são decisões distintas, com medições e limites próprios.
+
+## 15. Seleção free/local-first e APIs futuras
+
+O dispatcher deve aplicar uma política explícita e configurável: preferir ferramentas locais gratuitas adequadas; depois serviços gratuitos já autorizados e nós aprovados; usar ferramentas web gratuitas quando forem adequadas; e permitir APIs pagas apenas quando o utilizador configurar e autorizar o provedor e os limites de despesa. O sistema deve ponderar qualidade, confidencialidade, latência, disponibilidade, limites e recursos — não apenas preço. Se não houver opção gratuita apropriada, deve esperar, explicar a limitação ou pedir autorização; nunca gerar custos silenciosamente.
+
+Esta capacidade futura deve ser acrescentada através de adaptadores e contratos estáveis, preservando memória, política e estado canónico do DGM-MAT. A especificação complementar está em [Runtime adaptável e agentes distribuídos](DGM-MAT-ADAPTIVE-RUNTIME-AND-DISTRIBUTED-WORKERS-2026-10-12.md).
