@@ -1,0 +1,56 @@
+# DGM-MAT Digital Headquarters — pacote documental
+
+**Data:** 2026-10-12  
+**Estado:** documentação e pesquisa; não implementado  
+**Branch:** `docs/digital-headquarters-concept-2026-10-12`
+
+Este pacote preserva o conceito visual do escritório vivo, a investigação de agentes externos e a avaliação de bases de escritório virtual. Foi criado isoladamente para retomar o trabalho depois da auditoria/reconciliação dos branches locais e remotos.
+
+## Documentos
+
+1. [Conceito funcional e arquitetura futura](DGM-MAT-DIGITAL-HEADQUARTERS-CONCEPT-2026-10-12.md)
+   - Interface com navegação fixa esquerda, escritório central e chat à direita.
+   - Enfermaria, armazém, produção, QA, expedições, formação, contratação e remodelação.
+   - Regras de segurança, eventos conceptuais e plano por fases.
+
+2. [Integração de agentes externos e evolução autónoma](DGM-MAT-EXTERNAL-AGENTS-AND-SELF-IMPROVEMENT-RESEARCH-2026-10-12.md)
+   - DeepSeek Harness como trabalhador externo, não como cérebro.
+   - Arquitetura de adaptador, isolamento, compatibilidade, recursos e prova de conceito.
+   - Ciclo de melhoria baseado em evidência, testes, revisão e rollback.
+
+3. [Pesquisa comparativa de escritórios virtuais](DGM-MAT-VIRTUAL-OFFICE-TECHNOLOGY-RESEARCH-2026-10-12.md)
+   - My Virtual Office, Claude Office / Pixel Agent Office, My Virtual World, DeepSeek Harness e implementação própria.
+   - Comparação de arquitetura, visual, integrações, recursos e licenças.
+   - Recomendação de prova de conceito e plano incremental.
+
+4. [Wireframe SVG](assets/dgm-mat-digital-headquarters-wireframe.svg)
+   - Desenho vetorial de referência para a composição da interface.
+   - É um wireframe ilustrativo; valores e eventos desenhados não representam dados reais do sistema.
+
+## Decisões de segurança
+
+- DGM-MAT continua a ser o cérebro/orquestrador e fonte canónica de estado, memória, política e validação.
+- Harnesses externos são workers substituíveis.
+- O escritório é uma projeção do estado real, não uma segunda autoridade.
+- Nenhuma percentagem, expedição, colaboração, recuperação ou conclusão pode ser inventada.
+- Nenhuma instalação ou integração na máquina principal antes de medir recursos e testar isolamento.
+- Nenhum merge, rebase, reset ou sincronização foi realizado como parte deste pacote.
+
+## Próxima sequência ao regressar ao PC
+
+1. Auditoria read-only dos branches, working trees, commits locais e remotos.
+2. Preservar snapshots e reconciliar divergências conforme evidência.
+3. Auditar contratos, APIs, eventos e persistência atuais do DGM-MAT.
+4. Avaliar o Harness numa sandbox isolada e medir recursos.
+5. Prototipar a UI com dados mock; depois integrar read-only.
+6. Só depois decidir adoção, implementação e merge.
+
+## Fontes principais
+
+- https://github.com/deepseek-ai/deepseek-harness
+- https://github.com/eliautobot/my-virtual-office
+- https://github.com/paulrobello/claude-office
+- https://github.com/forgeekscn/pixel-agent-office
+- https://github.com/eliautobot/my-virtual-world
+- https://github.com/openhands/software-agent-sdk
+- https://github.com/SWE-agent/SWE-agent
