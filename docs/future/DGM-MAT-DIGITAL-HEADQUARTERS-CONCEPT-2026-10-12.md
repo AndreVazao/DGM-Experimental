@@ -259,3 +259,22 @@ São pistas para avaliação técnica, não dependências aprovadas. Verificar l
 
 ---
 **Próxima ação ao regressar ao PC:** auditar e reconciliar os branches com segurança primeiro; depois avaliar como integrar este conceito na arquitetura já existente. Não implementar nem fazer merge antes dessa etapa.
+
+
+## 14. Adaptação ao hardware e renderização em camadas
+
+O escritório deve suportar vários renderizadores substituíveis sobre o mesmo estado e os mesmos contratos: 3D quando as capacidades e os testes de desempenho o permitirem; 2D avançado/isométrico quando for mais adequado; 2D leve para máquinas modestas; e perfil mínimo com chat e uma personagem simples desenhada por traços. Deve existir também um modo sem animação. O perfil automático escolhe com base em capacidades e medições reais, com margem de recursos, mas o utilizador pode selecionar manualmente o modo. Se houver falhas ou perda de fluidez, a interface reduz a complexidade sem perder tarefas nem estado.
+
+A interface funcional (chat, pedidos, memória, estado e segurança) não pode depender do 3D ou de qualquer motor de jogo. Trocar de renderizador nunca cria uma segunda fonte de verdade. Não assumir que a presença de WebGL garante bom desempenho; validar no hardware-alvo e manter sempre um fallback leve.
+
+## 15. Rede de agentes em vários computadores
+
+A arquitetura futura deve permitir que o DGM-MAT use workers autorizados em diferentes PCs: por exemplo, Harness num computador e Claude Code noutro, além de ferramentas locais, Ollama, ferramentas web e futuras APIs. O cérebro, a política, a memória e a validação permanecem no DGM-MAT; cada PC disponibiliza capacidades através de um gateway/adaptador e de um contrato estável.
+
+A primeira versão distribuída deve usar registo manual e explícito dos nós, identidade individual, transporte encriptado, permissões mínimas, heartbeat e revogação. Um computador acessível na LAN não é automaticamente confiável. Começar com tarefas read-only e workspaces descartáveis; só depois permitir ações remotas aprovadas. Não expor serviços de agentes diretamente à Internet.
+
+## 16. Política de ferramentas e custos
+
+A preferência inicial é free/local-first: ferramentas locais gratuitas adequadas, serviços gratuitos já autorizados, outros nós autorizados e ferramentas web gratuitas. A seleção deve considerar também qualidade, confidencialidade, latência e limites. APIs pagas ficam previstas na arquitetura, mas só podem ser ativadas depois de o utilizador configurar e autorizar explicitamente o provedor e o orçamento. Nunca fazer chamadas pagas silenciosas.
+
+A especificação detalhada, incluindo perfis, gateway, catálogo de capacidades, segurança de rede, etapas e critérios de aceitação, está em [Runtime adaptável e agentes distribuídos](DGM-MAT-ADAPTIVE-RUNTIME-AND-DISTRIBUTED-WORKERS-2026-10-12.md).
