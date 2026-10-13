@@ -320,3 +320,79 @@ Fontes de projeto/documentação para verificar durante a auditoria; as descriç
 - Artigo de investigação sobre arquitetura de coding harnesses (2026): https://arxiv.org/abs/2609.00006
 
 **Limitação:** esta é uma shortlist documental, não uma auditoria de segurança nem uma medição prática. Nenhum candidato deve ser instalado ou receber acesso ao ambiente principal antes da prova de conceito e da comparação com a arquitetura existente.
+
+## 12. Recuperação assistida, aprendizagem com ajuda externa e prevenção de dependência
+
+### 12.1 Princípio obrigatório
+
+Quando o DGM-MAT não conseguir concluir uma tarefa com evidência suficiente, deve reconhecer o bloqueio, pedir ajuda ao recurso adequado e transformar a solução validada em conhecimento reutilizável. Pedir ajuda não é uma falha; repetir indefinidamente o mesmo erro sem aprender é uma falha de arquitetura.
+
+O ciclo esperado é:
+
+1. **Tentar:** consultar contratos, memória, ferramentas disponíveis e tentativas anteriores; executar apenas ações autorizadas.
+2. **Diagnosticar:** classificar o bloqueio (conhecimento, erro técnico, ferramenta em falta, permissão, limite externo, recursos de hardware, dependência ou ambiguidade).
+3. **Preparar o pedido:** reunir objetivo, contexto mínimo, evidências, erros completos relevantes, tentativas já feitas, restrições, critérios de aceitação e o que continua por descobrir.
+4. **Escolher ajuda:** selecionar documentação oficial, agente interno especializado, modelo alternativo, ferramenta externa aprovada ou pessoa responsável, segundo competência, privacidade, custo, latência e permissões.
+5. **Delegar com limites:** entregar uma tarefa delimitada, com entradas e saídas explícitas, prazo/limite de tentativas e sem conceder acesso amplo por conveniência. Não transmitir credenciais, tokens ou dados privados desnecessários.
+6. **Validar independentemente:** testar a resposta contra os critérios originais, reproduzir quando possível, verificar regressões e segurança e distinguir afirmações do ajudante de factos confirmados.
+7. **Aprender:** guardar a causa confirmada (ou marcar a hipótese como não confirmada), a solução, os testes, limitações, fonte/proveniência, versão e condições em que a solução é válida.
+8. **Reutilizar e avaliar:** procurar essa aprendizagem em tarefas futuras, confirmar que continua válida e medir se reduziu erros, tempo ou necessidade de assistência.
+
+### 12.2 Pedido de ajuda normalizado
+
+Cada pedido deve conter, quando aplicável:
+
+- identificador da tarefa e departamento responsável;
+- resultado pretendido e critérios de aceitação;
+- resumo curto do contexto e referências para artefactos, em vez de despejar todo o histórico;
+- evidências, logs e passos de reprodução;
+- tentativas anteriores e respetivos resultados;
+- questão concreta que o ajudante deve resolver;
+- restrições de segurança, privacidade, hardware, custo e dependências;
+- permissões estritamente necessárias;
+- formato esperado da resposta e testes para a validar.
+
+A resposta externa deve regressar como uma proposta identificável e auditável, não como uma ordem que substitui a governação do DGM-MAT.
+
+### 12.3 Memória de aprendizagem com proveniência
+
+Guardar a aprendizagem em camadas:
+
+- **Memória de incidente:** o que aconteceu, quando, evidências, impacto e resolução.
+- **Conhecimento reutilizável:** padrão do problema, diagnóstico, solução validada, alternativas rejeitadas e condições de aplicabilidade.
+- **Skill versionada:** apenas quando o procedimento for suficientemente repetível; deve incluir objetivo, gatilhos de ativação, entradas/saídas, ferramentas autorizadas, limites, testes e versão.
+- **Memória de fonte externa:** nome/identificador do agente ou fonte, data, versão/modelo quando conhecido, ligações e partes ainda não verificadas.
+
+Não converter automaticamente uma resposta externa em facto permanente. Classificar cada elemento como observado, confirmado por teste, inferido, sugerido externamente ou ainda por validar. Em caso de conflito, preservar a proveniência e pedir reconciliação; não apagar silenciosamente conhecimento anterior.
+
+### 12.4 Aprendizagem sem autoalteração perigosa
+
+O sistema pode propor uma melhoria de memória, skill, teste ou ferramenta. A alteração deve passar por revisão de diferenças, testes isolados, avaliação de permissões e comparação com a linha de base. A autonomia para aprender não concede automaticamente autorização para instalar software, ampliar acessos, alterar políticas, publicar código, apagar dados, gastar dinheiro ou modificar produção.
+
+Mudanças de alto impacto continuam sujeitas à autorização humana ou a uma política explícita previamente aprovada. Toda a alteração deve ser versionada, auditável e reversível.
+
+### 12.5 Evitar ciclos de ajuda e dependência infinita
+
+- Não repetir o mesmo pedido sem acrescentar novas evidências ou alterar a hipótese.
+- Registar tentativas e resultados para evitar recomeçar do zero.
+- Aplicar deduplicação, limite de tentativas, prazo, orçamento de mensagens e limite de delegações.
+- Detetar ciclos entre agentes e encaminhamentos repetidos; cancelar ou escalar quando não há progresso.
+- Se duas tentativas independentes falharem, ou se o risco/permissão ultrapassar o mandato, parar e pedir decisão humana em vez de improvisar.
+- Se não houver ajuda externa disponível, guardar o estado, indicar o bloqueio e retomar quando existir um recurso autorizado, sem simular sucesso.
+- Se a solução depender de uma versão, modelo, credencial ou ambiente específico, documentar essa dependência e criar um teste de validade futura.
+
+### 12.6 Métricas para demonstrar aprendizagem real
+
+Medir por tipo de tarefa, e não apenas pelo número de respostas recebidas:
+
+- taxa de sucesso após assistência;
+- percentagem de soluções externas que passam os testes independentes;
+- repetição do mesmo incidente depois de a aprendizagem ter sido registada;
+- número médio de tentativas e delegações por tarefa;
+- tempo até desbloqueio;
+- regressões e incidentes de segurança;
+- percentagem de aprendizagens com fonte, versão, teste e condições de validade;
+- redução, ao longo do tempo, da assistência necessária para problemas já conhecidos.
+
+**Critério de aceitação:** a aprendizagem só é considerada eficaz quando a memória ou skill fica registada com proveniência e uma tarefa posterior comparável demonstra, através de teste ou evidência, que o sistema consegue reutilizá-la corretamente. Uma resposta recebida, por si só, não prova aprendizagem.
+
