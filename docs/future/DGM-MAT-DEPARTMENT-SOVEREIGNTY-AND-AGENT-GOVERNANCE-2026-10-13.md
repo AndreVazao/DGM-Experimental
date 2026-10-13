@@ -114,3 +114,94 @@ Esta especificação não declara que estas capacidades já existem no runtime. 
 6. Documentar evidências, limitações e decisões antes de integrar em `main`.
 
 **Princípio final:** autonomia dentro do mandato, colaboração por contratos, memória com proveniência, autoridade central clara e nenhum ciclo de delegação sem limite.
+
+## 9. Criação, formação e contratação dinâmica de agentes por mandato do Patrão
+
+### 9.1 Princípio
+
+O DGM-MAT não deve ficar limitado ao conjunto de agentes existente no momento da sua instalação. Quando uma missão exige uma capacidade para a qual a organização não foi originalmente desenhada, deve identificar a lacuna, investigar alternativas e propor a forma mais segura e económica de a preencher. Pode formar um agente existente, criar um agente interno especializado, contratar/usar um agente externo autorizado ou propor um novo departamento.
+
+Esta capacidade não confere soberania independente ao agente nem altera a hierarquia: o **Patrão (DGM-MAT central)** mantém a autoridade sobre missão, prioridades, políticas, orçamento, permissões, aceitação e desativação. Os departamentos podem propor e executar dentro do mandato; não podem atribuir a si próprios novos poderes.
+
+### 9.2 Escolher a resposta mínima adequada
+
+Antes de criar algo novo, o coordenador deve verificar nesta ordem, ajustável com evidência:
+
+1. A capacidade já existe num agente, skill, conector ou ferramenta registada?
+2. Uma skill versionada ou formação de um agente existente resolve a lacuna?
+3. É necessária uma instância especializada temporária para uma única missão?
+4. Justifica-se um agente interno persistente, com responsabilidade e testes próprios?
+5. É mais adequado recorrer a um agente externo, serviço ou especialista aprovado?
+6. A necessidade é suficientemente contínua e abrangente para justificar um departamento?
+
+A decisão deve comparar qualidade esperada, fiabilidade, privacidade, custo, latência, consumo de recursos, manutenção, dependências, permissões e possibilidade de substituir o componente. Evitar criar agentes redundantes para resolver uma necessidade que uma skill ou integração mais simples já cobre.
+
+### 9.3 Proposta de criação/contratação
+
+Cada proposta deve declarar:
+
+- lacuna concreta e evidências de que os agentes atuais não a cobrem;
+- missão, âmbito, resultados esperados e critérios mensuráveis de aceitação;
+- se o agente é temporário ou persistente e quem é o responsável;
+- competências e ferramentas necessárias, com permissões mínimas;
+- modelo/runtime e requisitos de hardware, memória, concorrência e disponibilidade;
+- custo máximo, limites de chamadas/tentativas e condições de paragem;
+- dados que poderá consultar, retenção e regras de privacidade;
+- testes, avaliação independente, riscos conhecidos e plano de reversão;
+- condição de renovação, revisão, suspensão ou desativação;
+- aprendizagem que deve regressar à memória central e ao departamento requisitante.
+
+A decisão é registada como aprovada, recusada, adiada ou aprovada com condições. Se a política aplicável já tiver delegado autorização para uma classe de ações reversíveis e de baixo risco, o sistema pode atuar dentro desse limite e registar a decisão; fora dele, pede autorização ao Patrão/humano responsável.
+
+### 9.4 Agente temporário versus agente permanente
+
+- **Temporário:** escopo e prazo definidos, ambiente isolado, acesso mínimo e expiração automática. Os resultados úteis são avaliados e incorporados na memória ou numa skill aprovada antes do encerramento.
+- **Permanente:** exige prova de valor repetido, contrato de função, responsável, versão, testes, orçamento, monitorização, revisão periódica e procedimento de substituição/desativação.
+- **Externo/contratado:** acesso revogável e limitado à tarefa; não recebe automaticamente acesso ao repositório completo, memória privada, credenciais, rede interna ou ferramentas de execução. A contratação pode significar delegar trabalho através de uma API, MCP ou interface autorizada, não necessariamente instalar software.
+- **Novo departamento:** só quando há uma linha de trabalho persistente com responsabilidades e coordenação próprias. O departamento continua subordinado ao núcleo de governação e não pode criar subdepartamentos ou contratar agentes ilimitadamente.
+
+### 9.5 Contrato e ciclo de vida
+
+Todo o agente deve ter identidade estável, versão, mandato, responsável, entradas/saídas, competências declaradas, ferramentas permitidas, limites de recursos, política de dados, critérios de qualidade, registo de execução e estado de ciclo de vida.
+
+Estados recomendados: proposto → em avaliação → autorizado → em teste isolado → ativo com limites → suspenso/renovação pendente → desativado. Transições relevantes são auditadas; o agente não pode alterar unilateralmente o seu mandato, permissões ou estado.
+
+### 9.6 Aprendizagem organizacional
+
+Quando um novo agente resolve uma tarefa desconhecida:
+
+1. validar a solução e o seu impacto;
+2. guardar a proveniência, limitações, versões e evidências;
+3. identificar o conhecimento reutilizável e decidir se deve tornar-se uma skill;
+4. testar a skill separadamente do agente original, quando possível;
+5. disponibilizar a competência aos departamentos autorizados através do registo central;
+6. medir se reduz erros e dependência de assistência externa em tarefas posteriores.
+
+Não copiar cegamente prompts, código, dados ou materiais de agentes externos. Rever licenças, direitos de uso, privacidade e segurança antes de integrar artefactos. A resposta externa não pode modificar diretamente políticas centrais nem tornar-se autoridade por si mesma.
+
+### 9.7 Proteções contra expansão descontrolada
+
+- Limites globais e por departamento para agentes, subagentes, profundidade, fan-out, mensagens, tempo, memória e despesa.
+- Deteção de duplicados, ciclos de contratação/delegação e criação recursiva de agentes.
+- Uma proposta de agente não pode aprovar a própria criação nem autorizar o seu sucessor.
+- Requisitos de capacidade, orçamento e permissões são verificados antes da ativação.
+- Indisponibilidade de aprovação implica aguardar, usar uma alternativa já autorizada ou declarar o bloqueio; nunca contornar a governação.
+- Todos os agentes e acessos devem poder ser suspensos ou revogados centralmente, incluindo nos trabalhadores distribuídos.
+- A criação automática só é permitida em classes de risco previamente aprovadas e dentro de limites verificáveis; contratação paga, acesso a dados sensíveis, publicação, produção e alterações de segurança seguem a política de autorização explícita.
+
+### 9.8 Testes de aceitação
+
+Antes de ativar esta capacidade, testar pelo menos:
+
+- necessidade resolvida por skill existente sem criar agente redundante;
+- agente novo rejeitado por orçamento, permissões ou política;
+- agente temporário expirado e acessos revogados;
+- tentativa de agente criar/autorizar outro agente sem mandato;
+- ciclo de delegação/contratação detetado e interrompido;
+- agente externo com resposta incorreta ou maliciosa rejeitado pela validação;
+- reinício do runtime sem perder o registo de decisão nem duplicar a criação;
+- resultado bem-sucedido transformado em conhecimento com proveniência e reutilizado numa tarefa posterior;
+- desativação e reversão sem perda de memória ou artefactos necessários.
+
+**Critério de sucesso:** o DGM-MAT demonstra que consegue identificar uma lacuna, escolher a opção proporcional, obter a autorização necessária, testar o novo recurso, revogá-lo quando necessário e preservar a aprendizagem útil sem permitir expansão ilimitada da sua própria autoridade.
+
