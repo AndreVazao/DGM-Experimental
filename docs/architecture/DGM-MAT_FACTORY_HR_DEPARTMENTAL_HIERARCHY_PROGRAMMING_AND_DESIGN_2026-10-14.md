@@ -257,3 +257,73 @@ Este documento complementa, não substitui:
 - [Plano de independência do core e implementação do escritório](DGM-MAT_CORE_INDEPENDENCE_AND_VIRTUAL_OFFICE_IMPLEMENTATION_PLAN_2026-10-14.md)
 
 **Limite atual:** esta é uma especificação documental. Não afirma que os departamentos, o RH, a fábrica, os agentes especialistas ou o escritório descritos já existem ou funcionam no runtime. A próxima etapa é auditar a implementação atual e mapear requisitos para capacidades comprovadas, lacunas e testes, sem duplicar módulos nem alterar repositórios não autorizados.
+
+## 16. Proatividade soberana do DGM-MAT: investigação, propostas e melhoria controlada
+
+### Intenção
+O DGM-MAT deve ser proativo a identificar oportunidades para melhorar a qualidade, fiabilidade, eficiência e cobertura das funções que lhe foram confiadas. Proatividade significa observar evidências, reconhecer uma lacuna, investigar alternativas, formular propostas, testar hipóteses em ambientes seguros e apresentar resultados ao boss. **Não significa autoalteração irrestrita nem autorização para colocar mudanças em produção sem aprovação.**
+
+A iniciativa pode nascer de um pedido explícito do boss (“audita este programa e vê como o podemos melhorar”) ou de uma lacuna detetada pelo próprio DGM-MAT através de métricas, testes falhados, erros recorrentes, tarefas bloqueadas, desempenho insuficiente ou funcionalidades em falta.
+
+### Ciclo de melhoria proativa
+1. **Detetar e justificar:** identificar uma lacuna com evidências observáveis e explicar o impacto real; separar factos, hipóteses e desconhecidos.
+2. **Abrir uma proposta:** criar um registo de melhoria com objetivo, âmbito, critérios de sucesso, risco, recursos necessários, limitações e plano de reversão.
+3. **Investigar (RH + laboratórios):** consultar o catálogo de capacidades e a memória técnica, procurar soluções internas reutilizáveis e pesquisar fontes externas, repositórios, documentação e programas relevantes. Registar proveniência, licença, manutenção, dependências, segurança e custos.
+4. **Pedir trabalho à Programação:** RH ou o agente principal da melhoria pode emitir um pedido formal à chefia de Programação. A chefia designa um agente principal e os especialistas adequados, incluindo especialistas por linguagem quando necessário.
+5. **Criar uma área de trabalho isolada:** antes de alterar um programa existente, identificar o repositório e a branch corretos, verificar estado Git, callers, imports, contratos, testes, dados persistentes e dependências. Criar uma branch de trabalho ou clone descartável a partir de uma base identificada, sem modificar a fonte original.
+6. **Experimentar no laboratório:** implementar a alteração no ambiente isolado, guardar o diff e os artefactos, executar testes e comparar o comportamento anterior e posterior. Incluir testes de regressão, integração, segurança e recursos conforme o risco.
+7. **Revisão independente:** um verificador que não seja apenas o autor avalia resultados, falhas, efeitos secundários, compatibilidade, evidências e reversão. Se falhar, corrigir no clone ou abandonar a proposta; não disfarçar falhas.
+8. **Relatório ao boss:** apresentar problema, proposta, fontes, diff, testes executados, resultados comparativos, riscos residuais, custos, limitações e recomendação. Indicar claramente o que foi testado e o que não foi.
+9. **Aprovação explícita:** o boss decide aprovar, pedir alterações, adiar ou rejeitar. A aprovação deve referir-se à proposta/diff/versão concreta, não ser interpretada como autorização geral para mudanças futuras.
+10. **Implementação controlada:** só após aprovação, um processo de integração/implementação aplica a alteração à branch ou ambiente autorizado, com backup ou ponto de reversão, testes pós-integração e registo de auditoria.
+11. **Verificação e observação:** comparar o resultado real com os critérios de sucesso; se surgirem regressões, parar a promoção e reverter de acordo com o plano aprovado.
+12. **Aprendizagem documentada:** guardar decisão, evidências, lições e razão de aceitação/rejeição na memória técnica apropriada, sem incorporar como verdade uma hipótese que não foi confirmada.
+
+### Departamento de Implementação e Integração
+Fica proposta a criação de um **Departamento de Implementação e Integração**, ligado operacionalmente à fábrica e aos laboratórios, mas com responsabilidades distintas:
+- gerir branches/ambientes de teste e clones de trabalho autorizados;
+- preparar builds e aplicar mudanças aprovadas;
+- executar pipelines de validação e testes pós-integração;
+- manter backups, artefactos, diffs, versões e planos de reversão;
+- confirmar que a mudança aplicada corresponde exatamente à versão aprovada;
+- produzir evidências de implementação e devolver o resultado ao boss e à chefia responsável.
+
+Este departamento não deve ser o único a validar o seu próprio trabalho: revisão independente e testes automatizados apropriados continuam necessários. Não deve poder aprovar por si só alterações de produção, permissões, custos ou efeitos externos para os quais não tenha autorização explícita.
+
+### Regras de segurança para clones e repositórios
+- Um clone de experiência é descartável e isolado; não é uma licença para modificar o upstream nem para sincronizar automaticamente com ele.
+- Não tocar em clones de terceiros, Labs, mirrors congelados ou repositórios fora do âmbito autorizado.
+- Não fazer merge para `main`, push, deploy ou alterações a dados persistentes apenas porque os testes locais passaram.
+- Verificar licenças e obrigações antes de reutilizar código ou copiar implementações externas.
+- Não utilizar credenciais reais nem dados de produção em laboratórios, salvo procedimento explicitamente autorizado e protegido.
+- Se o estado da fonte original, a origem do código ou o impacto forem desconhecidos, parar e pedir esclarecimento.
+- Todas as operações devem ser auditáveis e reversíveis na medida tecnicamente possível.
+
+### Graus de autonomia
+- **Autónomo:** observar métricas, consultar documentação autorizada, inventariar capacidades, detetar oportunidades, criar propostas e executar testes não destrutivos em ambientes aprovados.
+- **Autonomia condicionada:** criar branches/clones, instalar dependências, executar código externo ou usar recursos adicionais apenas dentro de políticas, limites e ambientes previamente autorizados.
+- **Aprovação obrigatória:** integrar em branches protegidas, alterar runtime ou dados persistentes, instalar serviços permanentes, conceder permissões, aceder a credenciais, enviar dados para serviços externos, incorrer em custos, fazer push/deploy ou executar ações irreversíveis.
+- **Proibido por defeito:** contornar gates, alterar a própria política de segurança, apagar evidências, ocultar falhas, aprovar o próprio trabalho de alto risco ou usar fallback pago silencioso.
+
+### Critérios de aceitação
+A proatividade de melhoria só está demonstrada quando o DGM-MAT consegue identificar uma lacuna sustentada por evidências, formular uma proposta rastreável, investigar alternativas, testar uma alteração isoladamente, comparar resultados, apresentar o relatório ao boss e aguardar uma decisão antes da integração. Deve ser possível rejeitar uma proposta sem qualquer alteração na fonte original.
+
+## 17. Distinção obrigatória: proatividade do DGM-MAT versus Sovereign Trader
+
+A palavra “proatividade” não tem exatamente o mesmo significado nos dois projetos e os seus âmbitos não devem ser confundidos.
+
+### DGM-MAT — proatividade operacional e melhoria de software controlada
+O DGM-MAT pode identificar oportunidades de melhoria do seu próprio funcionamento e das ferramentas autorizadas, investigar, desenhar soluções, experimentar em clones, coordenar RH/Programação/Laboratório/Implementação e apresentar propostas ao boss. Pode desenvolver um agente novo quando o processo de RH/fábrica o justificar. **A alteração do programa original e a sua promoção para uso real continuam sujeitas a aprovação e gates.** Não se pretende autoevolução irrestrita.
+
+### Sovereign Trader — proatividade de investigação de oportunidades financeiras
+O Sovereign Trader deve ser proativo na pesquisa, análise e monitorização de oportunidades para procurar retornos financeiros: analisar mercados, instrumentos, estratégias, condições, custos, liquidez, risco, cenários e evidências; comparar hipóteses; detetar alterações relevantes; produzir oportunidades classificadas e relatórios para decisão.
+
+O objetivo é que o sistema não fique à espera de uma pergunta para começar a investigar dentro dos parâmetros autorizados. Deve procurar oportunidades de forma disciplinada e comunicar também quando não encontra uma oportunidade suficientemente fundamentada. A proatividade **não** significa garantir lucros, aumentar risco automaticamente, negociar sem autorização, alterar estratégias de produção por conta própria ou reescrever o seu próprio código.
+
+A pesquisa financeira deve distinguir dados observados, inferências, hipóteses e resultados históricos; considerar custos, slippage, liquidez, drawdown e risco de perda; validar estratégias em backtests e paper trading antes de qualquer utilização real; evitar sobreajuste e enviesamento de sobrevivência; e respeitar os limites do Risk Engine e do RealModeGuard. PAPER-first mantém-se como regra, e a passagem a REAL exige as aprovações e guardrails definidos para o projeto. Não há promessa de retorno nem “dinheiro garantido”.
+
+### Separação entre os projetos
+- O Sovereign Trader mantém escritório, processos, estado, contratos e ciclo de vida próprios; não depende do DGM-MAT, Mades ou de outros programas para executar a sua lógica essencial.
+- Não transferir automaticamente autonomia de desenvolvimento do DGM-MAT para o Sovereign Trader.
+- O DGM-MAT pode ajudar a pesquisar ou desenvolver ferramentas apenas quando explicitamente autorizado, mas isso não dá ao DGM-MAT controlo sobre decisões de trading nem elimina as barreiras de segurança do Sovereign Trader.
+- Os dois projetos devem manter documentação e auditoria separadas, com integrações opcionais e explícitas em vez de dependências implícitas.
