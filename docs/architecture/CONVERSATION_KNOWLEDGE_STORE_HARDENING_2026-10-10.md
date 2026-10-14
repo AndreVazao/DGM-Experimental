@@ -220,3 +220,13 @@ Validation after this addition: the selected regression suite (`conversation_int
 - First sample at 22:08: health healthy; 928 MB available of 3033 MB, system CPU 57.7% at that instant, runtime RSS 25.9 MB and sampled CPU 0%, 555 mission checkpoints and action counts unchanged; trace log 1,399,575 bytes.
 - Attempted Claude Code Free CLI v2.1.112 in plan/read-only mode with only Read/Glob/Grep. It exited because CLI is not authenticated (“Not logged in; Please run /login”). No authentication files or tokens were touched. A separate preliminary report records this limitation and the verified evidence.
 - Morning follow-up: inspect the JSONL trend; do not infer performance from the first sample, and do not auto-retry/approve historical missions.
+
+
+## 21. Resultados intermédios da monitorização noturna — 2026-10-11 05:49 local
+- Consolidação read-only de 31 amostras entre 2026-10-10 22:08:13 e 2026-10-11 05:38:32 (cerca de 7 h 30 min); o monitor PID 5504 e o runtime PID 3480 continuam presentes na verificação das 05:49. A monitorização estava ainda programada para continuar até às 08:00.
+- Saúde: 31/31 amostras HTTP 200 e `healthy`, zero erros; verificação direta adicional de `/health` também `healthy`.
+- RAM total 3033 MB; disponível entre 928 e 1235 MB, média aritmética das amostras 1153,6 MB e última amostra 1112 MB. CPU do sistema nas amostras: 0–57,7%, média aritmética pontual 5,9% (não representa medição contínua). RSS do runtime entre 25,5 e 26,0 MB; PID manteve-se 3480.
+- `runtime_activation.log` ficou em 1.399.575 bytes em todas as amostras, sem crescimento observado.
+- Sem alterações observadas: checkpoints de missão 555 (552 FAILED, 3 QUEUED); ações duráveis 107 COMPLETED, 71 FAILED, 787 QUEUED, 73 REJECTED. As contagens iguais não significam que as falhas históricas foram recuperadas nem que a fila avançou.
+- Conclusão provisória: estabilidade operacional e baixo consumo do processo Core no intervalo amostrado; RAM disponível moderada mas sem tendência de degradação sustentada nos dados recolhidos. Manter observação até às 08:00 e depois fechar relatório. Próxima tarefa técnica continua a ser auditoria idempotente das falhas históricas, sem reexecução automática.
+- Nenhuma alteração de missão/fila, reinício, push GitHub ou GitHub Actions.
