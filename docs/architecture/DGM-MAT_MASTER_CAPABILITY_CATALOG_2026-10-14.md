@@ -138,3 +138,6 @@ Nenhum item desta lista é automaticamente V1–V4.
 - Lista complementar: [claude-code-plugin-skill-catalog-2026-10-14.md](claude-code-plugin-skill-catalog-2026-10-14.md)
 - Conceito de escritório virtual: [DGM-MAT virtual office research](DGM-MAT_VIRTUAL_OFFICE_RESEARCH_2026-10-14.md)
 - Memória central: `AndreOS/02_PROJETOS/CATALOGO_MESTRE_CAPACIDADES_DGM_MAT_2026-10-14.md`
+
+## Requisitos organizacionais documentados
+- [Fábrica de agentes, RH, hierarquia departamental, Programação multi-linguagem e Design/UI/UX](DGM-MAT_FACTORY_HR_DEPARTMENTAL_HIERARCHY_PROGRAMMING_AND_DESIGN_2026-10-14.md) — visão e requisitos registados em 2026-10-14; não constitui prova de implementação nem autorização de instalação.
