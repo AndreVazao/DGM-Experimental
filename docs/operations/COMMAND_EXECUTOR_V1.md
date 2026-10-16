@@ -13,7 +13,8 @@
 - `system.summary`: read-only host/runtime summary using PowerShell.
 - `process.top`: bounded process listing using PowerShell.
 - `git.status`: read-only Git status for an existing working tree under `DGM_COMMAND_ALLOWED_ROOTS`.
-- `ollama.status`: calls `ollama list` if the executable is available.
+- `ollama.status`: calls `ollama list` if the executable is available; it never starts or stops Ollama.
+- `claude.status`: calls `claude --version` if the CLI is available; it does not read auth files or submit prompts.
 
 ## Deliberate limitations
 
