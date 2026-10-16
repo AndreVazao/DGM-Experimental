@@ -51,3 +51,16 @@ The code and tests have been added to the branch. The connected Desktop Commande
 4. Add a separate approved elevation broker; never pass administrator passwords to the LLM or shell.
 5. Integrate executor and engine status into the PC cockpit.
 6. Implement isolated self-repair and browser automation as separate branches.
+
+
+## PC cockpit integration — 2026-10-16
+
+The companion frontend branch `AndreVazao/DGM-Cockpit-Frontend:feat/pc-only-chat-cockpit-v1` now includes a governed-command panel wired to the two API routes documented above:
+
+- `GET /governance/commands/catalog` is queried using the current authenticated session. The UI only reports the catalog as healthy when `mode=read-only-allowlist` and `arbitrary_shell=false` are explicitly returned.
+- `POST /governance/commands/run` is invoked only after the user presses **Consultar motores**, and sends the fixed `engines.inventory` command ID. No free-form command input is exposed.
+- The returned process names and PIDs are rendered with DOM `textContent`; full command lines are not requested or shown. Inventory results are capped in the frontend and do not trigger process lifecycle changes.
+- Catalog permission failures, audit-storage failures, missing sessions and command errors remain visible as failures; the UI must not mark an operation successful based on a click alone.
+- Catalog checks are throttled; the process inventory is never run on the 30-second status polling loop, avoiding repetitive audit noise.
+
+**Integration status:** source changes are committed to the frontend PR branch, but this is not yet a validated live integration. The backend executor branch is still a draft and has not been installed on the target PC; end-to-end validation requires the backend branch to be safely integrated, focused tests to pass, and the PC runtime to be reachable. Do not describe the executor as active until that occurs.
