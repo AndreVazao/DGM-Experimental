@@ -64,3 +64,12 @@ The companion frontend branch `AndreVazao/DGM-Cockpit-Frontend:feat/pc-only-chat
 - Catalog checks are throttled; the process inventory is never run on the 30-second status polling loop, avoiding repetitive audit noise.
 
 **Integration status:** source changes are committed to the frontend PR branch, but this is not yet a validated live integration. The backend executor branch is still a draft and has not been installed on the target PC; end-to-end validation requires the backend branch to be safely integrated, focused tests to pass, and the PC runtime to be reachable. Do not describe the executor as active until that occurs.
+
+
+## Focused verification additions — 2026-10-16
+
+- The cockpit now rejects an empty or malformed catalog, requires every advertised command to have a constrained ID, `risk=READ`, and a boolean `requires_target`, and disables execution if the catalog fetch/validation fails. This prevents stale catalog entries being reused after a failed refresh.
+- The backend target validator now converts invalid path normalization errors (including embedded NUL characters) into a controlled `CommandDenied` response rather than an unexpected server error.
+- Added a regression test for invalid target-path characters.
+- Two manual-only GitHub Actions workflows are being added: focused Python security/executor tests in DGM-MAT, and dependency-free Node syntax/contract checks for the cockpit. They are deliberately `workflow_dispatch` only to avoid spending Actions minutes on every push.
+- These additions are not yet runtime-verified. A successful GitHub Actions run and PC end-to-end test remain required before merge/activation.
