@@ -27,12 +27,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Check out the dashboard
-        uses: actions/checkout@v6
-        with:
-          repository: AndreVazao/DGM-Cockpit-Frontend
-          ref: main
-          path: cockpit
+      - name: Download public dashboard source
+        shell: pwsh
+        run: |
+          git -c protocol.version=2 clone --depth 1 --branch main https://github.com/AndreVazao/DGM-Cockpit-Frontend.git cockpit
+          if (!(Test-Path "cockpit/app.js") -or !(Test-Path "cockpit/tests/cockpit-contract.test.cjs")) { throw "Dashboard checkout is incomplete or missing expected files." }
 
       - name: Set up Node
         uses: actions/setup-node@v6
