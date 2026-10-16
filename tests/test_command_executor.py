@@ -84,3 +84,31 @@ def test_timeout_is_reported(tmp_path):
     result = executor.execute("git.status", target_path=str(repo))
     assert result["status"] == "timeout"
     assert result["returncode"] is None
+
+
+
+def test_claude_status_is_read_only_version_probe(tmp_path):
+    calls = []
+    def runner(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return FakeCompleted(0, "2.1.112", "")
+    executor = CommandExecutor(
+        allowed_roots=[tmp_path], runner=runner,
+        which=lambda name: "/tools/claude" if name == "claude" else None,
+    )
+    result = executor.execute("claude.status")
+    assert result["status"] == "passed"
+    assert calls[0][0] == ["/tools/claude", "--version"]
+    assert calls[0][1]["shell"] is False
+
+
+def test_ollama_missing_is_reported_without_starting_process(tmp_path):
+    calls = []
+    executor = CommandExecutor(
+        allowed_roots=[tmp_path],
+        runner=lambda *a, **k: calls.append((a, k)),
+        which=lambda name: None,
+    )
+    result = executor.execute("ollama.status")
+    assert result["status"] == "unavailable"
+    assert calls == []
