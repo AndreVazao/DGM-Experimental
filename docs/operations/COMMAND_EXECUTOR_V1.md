@@ -5,9 +5,11 @@
 - `core/operations/command_executor.py`: explicit read-only command catalog; no arbitrary shell input.
 - `GET /governance/commands/catalog`: returns the allowed command IDs and current limitations.
 - `POST /governance/commands/run`: runs one catalog command and returns bounded stdout/stderr, exit code, duration and status.
+- `core/operations/operation_audit.py`: append-only JSONL audit records with redacted metadata.
 - `core/api/security_policy.py`: explicitly classifies both routes as operator-only; the existing local-session middleware must authenticate the request.
 - `tests/test_command_executor.py`: unit tests for unknown command denial, target path boundaries, shell=False, timeout reporting, output caps, fail-closed working directory, PowerShell arguments and diagnostic error redaction.
-- `tests/security/test_api_global_auth_enforcement.py`: negative/positive coverage for missing, read-only and operator session access to the new endpoints.
+- `tests/test_operation_audit.py`: audit append, schema/redaction, invalid-event rejection and fail-closed storage tests.
+- `tests/security/test_api_global_auth_enforcement.py`: negative/positive coverage for missing, read-only and operator session access, audit persistence and refusal to execute when the audit destination is unavailable.
 - `tests/security/test_api_security_policy.py`: confirms both command routes remain operator-only and classified.
 
 ## Available command IDs
@@ -17,6 +19,12 @@
 - `git.status`: read-only Git status for an existing working tree under `DGM_COMMAND_ALLOWED_ROOTS`.
 - `ollama.status`: calls `ollama list` if the executable is available; it never starts or stops Ollama.
 - `claude.status`: calls `claude --version` if the CLI is available; it does not read auth files or submit prompts.
+
+## Audit behavior
+
+Before a governed command is executed, the API must persist a `command.requested` event. If audit storage is unavailable, execution is refused. A `command.completed` or `command.denied` event is then appended. Records include UTC timestamp, event, command ID, status, session ID, duration and return code where available. They do not include stdout/stderr, credential values, or target paths.
+
+The default path is `%LOCALAPPDATA%\\DGM-MAT\\audit\\command-audit.jsonl` on Windows. `DGM_COMMAND_AUDIT_PATH` can override it for controlled deployment/testing. Appends are serialized within the process and flushed with `fsync`. This is an application-level audit trail, not tamper-proof forensic storage; local administrators can still alter files and multi-process writers need further validation.
 
 ## Security behavior
 
@@ -28,7 +36,7 @@ The route middleware requires an operator-scoped local session for both command 
 
 This is a first implementation slice, not unrestricted machine control. It does **not** accept arbitrary PowerShell/CMD strings, perform administrator elevation, install software, start/stop services, change files, or manage credentials. The default allowlisted repository roots are `C:\\ProgramasGodMode` and `C:\\DevopGodMode`; override them with the semicolon-separated `DGM_COMMAND_ALLOWED_ROOTS` environment variable only after reviewing the scope.
 
-The current implementation does not yet provide persistent audit storage or request rate limiting. Those remain acceptance requirements before expanding this into mutating operations. Windows-specific runtime validation is also pending.
+No process lifecycle manager or automatic self-repair is included in this slice. Those require separate explicit ownership tracking and approval gates before mutation. Windows-specific runtime validation is pending.
 
 ## Validation status
 
@@ -37,7 +45,7 @@ The code and tests have been added to the branch. The connected Desktop Commande
 ## Next steps
 
 1. Run the focused unit/security tests in a development checkout and fix any failures.
-2. Add redacted persistent audit records and request correlation IDs.
+2. Validate the audit file's permissions and multi-process behavior on Windows.
 3. Add a read-only lifecycle inventory, then lifecycle commands limited to processes explicitly started and tracked by DGM-MAT.
 4. Add a separate approved elevation broker; never pass administrator passwords to the LLM or shell.
 5. Integrate executor job status into the PC cockpit.
