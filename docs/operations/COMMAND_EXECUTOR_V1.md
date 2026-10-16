@@ -78,3 +78,11 @@ The companion frontend branch `AndreVazao/DGM-Cockpit-Frontend:feat/pc-only-chat
 ## Automated test entry points — 2026-10-16
 
 A manual-only workflow is available at `.github/workflows/governed-executor-tests.yml`. It runs the focused executor, audit and API-auth/security tests and is intentionally not triggered by pushes or pull requests. It has been committed to the feature branch but has **not** been dispatched in this session. Do not treat the tests as passing until the workflow run is observed as successful.
+
+
+## Latest branch verification — 2026-10-16 19:32 UTC
+
+- Latest DGM-MAT executor branch head: `3394d20d579edcc9d315a6d26b7293a170d4650c`.
+- Added malformed target-path regression and strengthened the audit-storage test so it fails if executor execution is attempted before a request audit is persisted.
+- Focused workflow is present and `workflow_dispatch` only. It has not been run; this session's GitHub integration does not expose a workflow-dispatch action.
+- GitHub reports PR #74 `mergeable_state=clean`; this only describes mergeability, not test success. Keep it draft until the manual test workflow and Windows-PC validation pass.
