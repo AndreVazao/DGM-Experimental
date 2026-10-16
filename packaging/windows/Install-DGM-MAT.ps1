@@ -49,6 +49,13 @@ On Error Resume Next
 Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 base = fso.GetParentFolderName(WScript.ScriptFullName)
+' Avoid launching a second copy even while the first instance is still booting.
+Set wmi = GetObject("winmgmts:\\.\root\cimv2")
+Set processes = wmi.ExecQuery("SELECT ProcessId FROM Win32_Process WHERE Name='DGM-MAT-BackOffice.exe'")
+If Err.Number = 0 Then
+  If processes.Count > 0 Then WScript.Quit 0
+End If
+Err.Clear
 Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 http.setTimeouts 1000, 1000, 1000, 1000
 http.Open "GET", "http://127.0.0.1:8181/health", False
