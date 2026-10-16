@@ -24,6 +24,7 @@ class CommandSpec:
 CATALOG: tuple[CommandSpec, ...] = (
     CommandSpec("system.summary", "Read Windows/host and PowerShell runtime summary", "READ"),
     CommandSpec("process.top", "List a bounded sample of processes", "READ"),
+    CommandSpec("engines.inventory", "Observe running Ollama and Claude Code process names/IDs without managing them", "READ"),
     CommandSpec("git.status", "Read Git status for an authorized repository path", "READ", True),
     CommandSpec("ollama.status", "Check Ollama CLI availability and installed models", "READ"),
     CommandSpec("claude.status", "Check Claude Code CLI availability and version", "READ"),
@@ -103,6 +104,15 @@ class CommandExecutor:
                 "Get-Process | Sort-Object CPU -Descending | Select-Object -First 12 Name,Id,CPU | "
                 "ConvertTo-Json -Compress"
             )
+        elif command_id == "engines.inventory":
+            # Never return full command lines: they may contain private arguments.
+            argv = self._powershell_argv(
+                "$ErrorActionPreference='Stop'; "
+                "Get-CimInstance Win32_Process | Where-Object { "
+                "$_.Name -match '^(ollama|claude)(\.exe)?$' -or "
+                "($_.Name -match '^node(\.exe)?$' -and $_.CommandLine -match 'claude') "
+                "} | Select-Object Name,ProcessId | ConvertTo-Json -Compress"
+            )
         elif command_id == "ollama.status":
             executable = self.which("ollama")
             if not executable:
@@ -113,7 +123,7 @@ class CommandExecutor:
             if not executable:
                 return self._result(command_id, "unavailable", 127, "", "Claude Code CLI executable not found", started)
             argv = [executable, "--version"]
-        else:  # defensive against future catalog drift
+        else:
             raise CommandDenied("Command has no execution implementation.")
 
         try:
@@ -136,7 +146,6 @@ class CommandExecutor:
             stderr = exc.stderr.decode("utf-8", "replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
             return self._result(command_id, "timeout", None, str(stdout), str(stderr), started)
         except OSError as exc:
-            # Return only the exception class; OS messages may disclose local paths or details.
             return self._result(command_id, "failed", None, "", type(exc).__name__, started)
 
     def _validate_target(self, raw: str) -> Path:
@@ -175,7 +184,6 @@ class CommandExecutor:
         self, command_id: str, status: str, returncode: int | None,
         stdout: str, stderr: str, started: float,
     ) -> dict[str, Any]:
-        # Avoid writing logs here; API caller may audit metadata, never raw secrets.
         return {
             "schema": "dgm-mat.command-result.v1",
             "command_id": command_id,
