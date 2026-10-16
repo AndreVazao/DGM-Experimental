@@ -44,7 +44,7 @@ jobs:
             tests/security/test_api_security_policy.py
       - name: Check out cockpit contract tests
         run: |
-          git clone --depth 1 --branch feat/pc-only-chat-cockpit-v1 \
+          git clone --depth 1 --branch main \
             https://github.com/AndreVazao/DGM-Cockpit-Frontend.git cockpit
       - name: Set up Node for cockpit checks
         uses: actions/setup-node@v6
