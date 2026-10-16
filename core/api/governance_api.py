@@ -3,13 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from core.repository_intelligence.portfolio_auditor import RepositoryAuditEngine
 from core.self_healing.self_repair_engine import SelfRepairEngine
 from core.governance.runtime_capability_profile import collect_runtime_capability_profile
 from core.operations.command_executor import CommandDenied, CommandExecutor
+from core.operations.operation_audit import AuditWriteError, append_command_audit
 
 
 router = APIRouter(prefix="/governance", tags=["governance"])
@@ -55,7 +56,10 @@ def apply_self_repair(request: RepairRequest):
     if not request.confirm:
         raise HTTPException(status_code=400, detail="Explicit confirm=true is required.")
     return SelfRepairEngine().apply_safe(dry_run=request.dry_run)
+
+
 from core.conversation_intelligence import ConversationIntelligencePipeline, ConversationRecord
+
 
 class ConversationRequest(BaseModel):
     conversation_id: str
@@ -63,6 +67,7 @@ class ConversationRequest(BaseModel):
     title: str
     content: str
     url: str | None = None
+
 
 @router.post("/conversations/analyze")
 def analyze_conversation(request: ConversationRequest):
@@ -79,7 +84,6 @@ def analyze_conversation(request: ConversationRequest):
     }
 
 
-
 class CommandRunRequest(BaseModel):
     command_id: str
     target_path: str | None = None
@@ -92,12 +96,53 @@ def command_catalog():
 
 
 @router.post("/commands/run")
-def run_governed_command(request: CommandRunRequest):
-    """Run one allowlisted, read-only diagnostic. Raw shell text is not accepted."""
+def run_governed_command(payload: CommandRunRequest, request: Request):
+    """Run one allowlisted, read-only diagnostic with durable, redacted audit events."""
+    principal = getattr(request.state, "dgm_principal", {}) or {}
+    session_id = principal.get("session_id") if isinstance(principal, dict) else None
+
+    # Persist the intent before execution. If the audit destination is unavailable,
+    # do not run the command and leave an unaudited action behind.
     try:
-        return CommandExecutor().execute(
-            request.command_id,
-            target_path=request.target_path,
+        append_command_audit(
+            event="command.requested",
+            command_id=payload.command_id,
+            status="requested",
+            session_id=session_id,
+        )
+    except (AuditWriteError, ValueError):
+        raise HTTPException(status_code=503, detail="Command audit storage is unavailable; execution refused.")
+
+    try:
+        result = CommandExecutor().execute(
+            payload.command_id,
+            target_path=payload.target_path,
         )
     except CommandDenied as exc:
+        try:
+            append_command_audit(
+                event="command.denied",
+                command_id=payload.command_id,
+                status="denied",
+                session_id=session_id,
+            )
+        except (AuditWriteError, ValueError):
+            raise HTTPException(status_code=503, detail="Command denied; audit storage is unavailable.") from exc
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    try:
+        append_command_audit(
+            event="command.completed",
+            command_id=payload.command_id,
+            status=str(result.get("status", "unknown")),
+            session_id=session_id,
+            duration_ms=result.get("duration_ms"),
+            returncode=result.get("returncode"),
+        )
+    except (AuditWriteError, ValueError):
+        # Do not claim a fully audited result when durable completion metadata failed.
+        raise HTTPException(
+            status_code=503,
+            detail="Command may have run, but its completion audit could not be persisted; verify before retrying.",
+        )
+    return result
