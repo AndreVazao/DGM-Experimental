@@ -184,3 +184,15 @@ def test_os_error_message_is_not_returned(tmp_path):
     assert result["status"] == "failed"
     assert result["stderr"] == "OSError"
     assert "private.txt" not in result["stderr"]
+
+
+def test_git_target_with_invalid_path_characters_is_denied(tmp_path):
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    executor = CommandExecutor(
+        allowed_roots=[allowed],
+        runner=lambda *a, **k: pytest.fail("runner must not be invoked"),
+        which=lambda name: "/usr/bin/git",
+    )
+    with pytest.raises(CommandDenied, match="Target path is invalid"):
+        executor.execute("git.status", target_path="bad\\x00path")
