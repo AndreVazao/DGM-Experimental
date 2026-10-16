@@ -86,3 +86,6 @@ A manual-only workflow is available at `.github/workflows/governed-executor-test
 - Added malformed target-path regression and strengthened the audit-storage test so it fails if executor execution is attempted before a request audit is persisted.
 - Focused workflow is present and `workflow_dispatch` only. It has not been run; this session's GitHub integration does not expose a workflow-dispatch action.
 - GitHub reports PR #74 `mergeable_state=clean`; this only describes mergeability, not test success. Keep it draft until the manual test workflow and Windows-PC validation pass.
+
+
+The pre-existing `autonomy-smoke.yml` workflow on the default branch is also extended in this feature branch to run these focused backend tests and clone/run the cockpit's Node contract tests. Because the workflow already exists on the default branch, it can be manually dispatched from GitHub Actions with branch `feat/governed-command-executor-v1` selected. No push or pull-request trigger was added. The workflow has not yet been dispatched in this session.
