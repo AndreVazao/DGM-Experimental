@@ -58,8 +58,8 @@ The code and tests have been added to the branch. The connected Desktop Commande
 The companion frontend branch `AndreVazao/DGM-Cockpit-Frontend:feat/pc-only-chat-cockpit-v1` now includes a governed-command panel wired to the two API routes documented above:
 
 - `GET /governance/commands/catalog` is queried using the current authenticated session. The UI only reports the catalog as healthy when `mode=read-only-allowlist` and `arbitrary_shell=false` are explicitly returned.
-- `POST /governance/commands/run` is invoked only after the user presses **Consultar motores**, and sends the fixed `engines.inventory` command ID. No free-form command input is exposed.
-- The returned process names and PIDs are rendered with DOM `textContent`; full command lines are not requested or shown. Inventory results are capped in the frontend and do not trigger process lifecycle changes.
+- The cockpit populates a command selector from the authenticated catalog. A user must explicitly press **Executar diagnóstico**; only catalog command IDs are submitted. Commands that declare `requires_target=true` reveal a target-path field, but the backend remains responsible for validating the path against its configured allowed roots.
+- `engines.inventory` is the default selection. Its returned process names and PIDs are rendered with DOM `textContent`; full command lines are not requested or shown. Output is capped in the frontend and diagnostics do not trigger process lifecycle changes.
 - Catalog permission failures, audit-storage failures, missing sessions and command errors remain visible as failures; the UI must not mark an operation successful based on a click alone.
 - Catalog checks are throttled; the process inventory is never run on the 30-second status polling loop, avoiding repetitive audit noise.
 
