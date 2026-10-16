@@ -69,6 +69,8 @@ ROUTE_CLASSIFICATIONS: tuple[RouteClassification, ...] = (
     RouteClassification(("GET",), "/governance/repair/self/plan", SecurityScope.OPERATOR, "Self-repair plan."),
     RouteClassification(("POST",), "/governance/repair/self/apply", SecurityScope.OPERATOR, "Potentially mutating repair."),
     RouteClassification(("POST",), "/governance/conversations/analyze", SecurityScope.OPERATOR, "Processes submitted conversation content."),
+    RouteClassification(("GET",), "/governance/commands/catalog", SecurityScope.OPERATOR, "Lists allowlisted read-only local diagnostics."),
+    RouteClassification(("POST",), "/governance/commands/run", SecurityScope.OPERATOR, "Runs one allowlisted read-only local diagnostic."),
     RouteClassification(("POST",), "/provider-execution/requests", SecurityScope.PROVIDER_API, "Provider request intake."),
     RouteClassification(("GET",), "/provider-execution/approvals", SecurityScope.PROVIDER_OPERATOR, "Provider approvals."),
     RouteClassification(("POST",), "/provider-execution/approvals/{approval_task_id}/decision", SecurityScope.PROVIDER_OPERATOR, "Provider approval decision."),

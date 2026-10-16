@@ -1,4 +1,3 @@
-# Path: C:\\ProgramasGodMode\\DGM-MAT\\tests\\security\\test_api_global_auth_enforcement.py
 from pathlib import Path
 
 import pytest
@@ -7,6 +6,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from core.api.api_server import app
 from core.api.local_auth_api import session_manager
+from core.operations.command_executor import CommandExecutor
 
 
 @pytest.fixture
@@ -17,10 +17,10 @@ def client():
     session_manager.revoke_all()
 
 
-def _session():
+def _session(scopes=None):
     return session_manager.create_session(
         "security-test-client",
-        {"local-client", "operator"},
+        scopes or {"local-client", "operator"},
     )[0]
 
 
@@ -35,7 +35,6 @@ def test_valid_session_allows_local_read_and_operator_action_route(client):
     token = _session()
     headers = {"Authorization": f"Bearer {token}"}
     assert client.get("/runtime/truth", headers=headers).status_code == 200
-    # This route is only invoked with a deliberately invalid payload; auth must pass first.
     response = client.post("/runtime/missions", headers=headers, json={})
     assert response.status_code == 422
 
@@ -49,13 +48,69 @@ def test_expired_or_revoked_session_is_rejected(client):
 
 
 def test_insufficient_scope_is_rejected(client):
-    token = session_manager.create_session("read-only", {"local-client"})[0]
+    token = _session({"local-client"})
     response = client.post(
         "/runtime/missions",
         headers={"Authorization": f"Bearer {token}"},
         json={"goal": "test", "description": "must not create"},
     )
     assert response.status_code in {400, 403}
+
+
+def test_governed_command_routes_require_operator_session(client):
+    assert client.get("/governance/commands/catalog").status_code == 401
+    assert client.post(
+        "/governance/commands/run",
+        json={"command_id": "system.summary"},
+    ).status_code == 401
+
+    read_only_token = _session({"local-client"})
+    read_only_headers = {"Authorization": f"Bearer {read_only_token}"}
+    assert client.get(
+        "/governance/commands/catalog", headers=read_only_headers
+    ).status_code == 403
+    assert client.post(
+        "/governance/commands/run",
+        headers=read_only_headers,
+        json={"command_id": "not-allowed"},
+    ).status_code == 403
+
+
+def test_operator_session_can_read_catalog_and_invalid_command_is_denied(client, tmp_path, monkeypatch):
+    monkeypatch.setenv("DGM_COMMAND_AUDIT_PATH", str(tmp_path / "audit.jsonl"))
+    token = _session()
+    headers = {"Authorization": f"Bearer {token}"}
+    catalog = client.get("/governance/commands/catalog", headers=headers)
+    assert catalog.status_code == 200
+    assert catalog.json()["arbitrary_shell"] is False
+
+    response = client.post(
+        "/governance/commands/run",
+        headers=headers,
+        json={"command_id": "powershell.raw", "target_path": "C:/"},
+    )
+    assert response.status_code == 400
+    audit_lines = (tmp_path / "audit.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(audit_lines) == 2
+
+
+def test_command_is_not_run_when_audit_storage_is_unavailable(client, tmp_path, monkeypatch):
+    blocker = tmp_path / "blocker"
+    blocker.write_text("file blocks directory", encoding="utf-8")
+    monkeypatch.setenv("DGM_COMMAND_AUDIT_PATH", str(blocker / "audit.jsonl"))
+    monkeypatch.setattr(
+        CommandExecutor,
+        "execute",
+        lambda *args, **kwargs: pytest.fail("executor must not run without a persisted request audit"),
+    )
+    token = _session()
+    response = client.post(
+        "/governance/commands/run",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"command_id": "system.summary"},
+    )
+    assert response.status_code == 503
+    assert "execution refused" in response.text
 
 
 def test_websocket_requires_session_header(client):

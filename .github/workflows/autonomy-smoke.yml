@@ -32,3 +32,27 @@ jobs:
           python -c "import os; \
             assert os.path.exists('tests/autonomy/test_loop.py'), \
             'Critical autonomy tests missing'"
+      - name: Run governed executor and API security tests
+        env:
+          PYTHONPATH: .
+          DGM_COMMAND_AUDIT_PATH: ${{ runner.temp }}/dgm-command-audit.jsonl
+        run: |
+          pytest -q \
+            tests/test_command_executor.py \
+            tests/test_operation_audit.py \
+            tests/security/test_api_global_auth_enforcement.py \
+            tests/security/test_api_security_policy.py
+      - name: Check out cockpit contract tests
+        run: |
+          git clone --depth 1 --branch feat/pc-only-chat-cockpit-v1 \
+            https://github.com/AndreVazao/DGM-Cockpit-Frontend.git cockpit
+      - name: Set up Node for cockpit checks
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Check cockpit JavaScript syntax
+        working-directory: cockpit
+        run: node --check app.js
+      - name: Run cockpit contract tests
+        working-directory: cockpit
+        run: node --test tests/cockpit-contract.test.cjs
