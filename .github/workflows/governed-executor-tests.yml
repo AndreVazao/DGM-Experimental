@@ -1,0 +1,35 @@
+name: Governed Executor Focused Tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  governed-executor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install project test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest
+      - name: Run executor, audit and API security tests
+        env:
+          PYTHONPATH: .
+          DGM_COMMAND_AUDIT_PATH: ${{ runner.temp }}/dgm-command-audit.jsonl
+        run: |
+          pytest -q \
+            tests/test_command_executor.py \
+            tests/test_operation_audit.py \
+            tests/security/test_api_global_auth_enforcement.py \
+            tests/security/test_api_security_policy.py
