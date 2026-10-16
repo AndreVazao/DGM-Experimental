@@ -75,7 +75,8 @@ def test_governed_command_routes_require_operator_session(client):
     ).status_code == 403
 
 
-def test_operator_session_can_read_catalog_and_invalid_command_is_denied(client):
+def test_operator_session_can_read_catalog_and_invalid_command_is_denied(client, tmp_path, monkeypatch):
+    monkeypatch.setenv("DGM_COMMAND_AUDIT_PATH", str(tmp_path / "audit.jsonl"))
     token = _session()
     headers = {"Authorization": f"Bearer {token}"}
     catalog = client.get("/governance/commands/catalog", headers=headers)
@@ -88,6 +89,22 @@ def test_operator_session_can_read_catalog_and_invalid_command_is_denied(client)
         json={"command_id": "powershell.raw", "target_path": "C:/"},
     )
     assert response.status_code == 400
+    audit_lines = (tmp_path / "audit.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(audit_lines) == 2
+
+
+def test_command_is_not_run_when_audit_storage_is_unavailable(client, tmp_path, monkeypatch):
+    blocker = tmp_path / "blocker"
+    blocker.write_text("file blocks directory", encoding="utf-8")
+    monkeypatch.setenv("DGM_COMMAND_AUDIT_PATH", str(blocker / "audit.jsonl"))
+    token = _session()
+    response = client.post(
+        "/governance/commands/run",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"command_id": "system.summary"},
+    )
+    assert response.status_code == 503
+    assert "execution refused" in response.text
 
 
 def test_websocket_requires_session_header(client):
