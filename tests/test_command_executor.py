@@ -27,7 +27,7 @@ def test_catalog_does_not_offer_arbitrary_shell_or_elevation():
     catalog = executor.catalog()
     assert catalog["arbitrary_shell"] is False
     assert catalog["administrator_elevation"] is False
-    assert {item["id"] for item in catalog["commands"]} >= {"system.summary", "git.status"}
+    assert {item["id"] for item in catalog["commands"]} >= {"system.summary", "git.status", "engines.inventory"}
 
 
 def test_unknown_command_is_denied():
@@ -138,6 +138,26 @@ def test_system_summary_uses_fixed_powershell_script_and_no_shell(tmp_path):
         "/windows/powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive", "-Command"
     ]
     assert "PowerShell=$PSVersionTable.PSVersion.ToString()" in calls[0][0][5]
+    assert calls[0][1]["shell"] is False
+
+
+def test_engine_inventory_only_returns_process_names_and_ids(tmp_path):
+    calls = []
+
+    def runner(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return FakeCompleted(0, '[{"Name":"ollama.exe","ProcessId":123}]', "")
+
+    executor = CommandExecutor(
+        allowed_roots=[tmp_path], runner=runner,
+        which=lambda name: "/windows/powershell.exe" if name == "powershell" else None,
+    )
+    result = executor.execute("engines.inventory")
+    assert result["status"] == "passed"
+    script = calls[0][0][5]
+    assert "Select-Object Name,ProcessId" in script
+    assert "CommandLine" in script  # used only for filtering, never selected/returned
+    assert "Select-Object Name,ProcessId,CommandLine" not in script
     assert calls[0][1]["shell"] is False
 
 
