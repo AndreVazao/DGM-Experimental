@@ -26,6 +26,7 @@ CATALOG: tuple[CommandSpec, ...] = (
     CommandSpec("process.top", "List a bounded sample of processes", "READ"),
     CommandSpec("git.status", "Read Git status for an authorized repository path", "READ", True),
     CommandSpec("ollama.status", "Check Ollama CLI availability and installed models", "READ"),
+    CommandSpec("claude.status", "Check Claude Code CLI availability and version", "READ"),
 )
 
 
@@ -107,6 +108,11 @@ class CommandExecutor:
             if not executable:
                 return self._result(command_id, "unavailable", 127, "", "ollama executable not found", started)
             argv = [executable, "list"]
+        elif command_id == "claude.status":
+            executable = self.which("claude")
+            if not executable:
+                return self._result(command_id, "unavailable", 127, "", "Claude Code CLI executable not found", started)
+            argv = [executable, "--version"]
         else:  # defensive against future catalog drift
             raise CommandDenied("Command has no execution implementation.")
 
