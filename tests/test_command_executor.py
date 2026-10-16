@@ -17,7 +17,7 @@ class FakeCompleted:
 
 def make_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
-    repo.mkdir()
+    repo.mkdir(parents=True)
     (repo / ".git").mkdir()
     return repo
 
@@ -65,10 +65,15 @@ def test_git_status_uses_no_shell_and_structured_args(tmp_path):
 
 
 def test_output_is_bounded(tmp_path):
-    executor = CommandExecutor(allowed_roots=[tmp_path], runner=lambda *a, **k: FakeCompleted(stdout="x" * 5000), which=lambda name: "/usr/bin/git", output_limit=512)
-    result = executor.execute("ollama.status")
-    # Simulate executable resolution separately to keep this deterministic.
-    assert result["status"] == "unavailable" or len(result["stdout"]) <= 512
+    repo = make_repo(tmp_path)
+    executor = CommandExecutor(
+        allowed_roots=[tmp_path],
+        runner=lambda *a, **k: FakeCompleted(stdout="x" * 5000),
+        which=lambda name: "/usr/bin/git",
+        output_limit=512,
+    )
+    result = executor.execute("git.status", target_path=str(repo))
+    assert len(result["stdout"]) == 512
 
 
 def test_timeout_is_reported(tmp_path):
