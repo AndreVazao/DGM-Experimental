@@ -34,7 +34,6 @@ def test_valid_session_allows_local_read_and_operator_action_route(client):
     token = _session()
     headers = {"Authorization": f"Bearer {token}"}
     assert client.get("/runtime/truth", headers=headers).status_code == 200
-    # This route is only invoked with a deliberately invalid payload; auth must pass first.
     response = client.post("/runtime/missions", headers=headers, json={})
     assert response.status_code == 422
 
@@ -48,7 +47,7 @@ def test_expired_or_revoked_session_is_rejected(client):
 
 
 def test_insufficient_scope_is_rejected(client):
-    token = _session("read-only", {"local-client"})
+    token = _session({"local-client"})
     response = client.post(
         "/runtime/missions",
         headers={"Authorization": f"Bearer {token}"},
