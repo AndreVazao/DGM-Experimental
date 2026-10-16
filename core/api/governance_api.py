@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from core.repository_intelligence.portfolio_auditor import RepositoryAuditEngine
 from core.self_healing.self_repair_engine import SelfRepairEngine
 from core.governance.runtime_capability_profile import collect_runtime_capability_profile
+from core.operations.command_executor import CommandDenied, CommandExecutor
 
 
 router = APIRouter(prefix="/governance", tags=["governance"])
@@ -76,3 +77,27 @@ def analyze_conversation(request: ConversationRequest):
         "suggested_project": audit.suggested_project,
         "suggested_title": audit.suggested_title,
     }
+
+
+
+class CommandRunRequest(BaseModel):
+    command_id: str
+    target_path: str | None = None
+
+
+@router.get("/commands/catalog")
+def command_catalog():
+    """List the explicit read-only command catalog; no execution occurs."""
+    return CommandExecutor().catalog()
+
+
+@router.post("/commands/run")
+def run_governed_command(request: CommandRunRequest):
+    """Run one allowlisted, read-only diagnostic. Raw shell text is not accepted."""
+    try:
+        return CommandExecutor().execute(
+            request.command_id,
+            target_path=request.target_path,
+        )
+    except CommandDenied as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
