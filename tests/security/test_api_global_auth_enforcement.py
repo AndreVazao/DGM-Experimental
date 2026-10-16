@@ -6,6 +6,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from core.api.api_server import app
 from core.api.local_auth_api import session_manager
+from core.operations.command_executor import CommandExecutor
 
 
 @pytest.fixture
@@ -97,6 +98,11 @@ def test_command_is_not_run_when_audit_storage_is_unavailable(client, tmp_path, 
     blocker = tmp_path / "blocker"
     blocker.write_text("file blocks directory", encoding="utf-8")
     monkeypatch.setenv("DGM_COMMAND_AUDIT_PATH", str(blocker / "audit.jsonl"))
+    monkeypatch.setattr(
+        CommandExecutor,
+        "execute",
+        lambda *args, **kwargs: pytest.fail("executor must not run without a persisted request audit"),
+    )
     token = _session()
     response = client.post(
         "/governance/commands/run",
