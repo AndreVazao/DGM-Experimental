@@ -73,3 +73,8 @@ The companion frontend branch `AndreVazao/DGM-Cockpit-Frontend:feat/pc-only-chat
 - Added a regression test for invalid target-path characters.
 - Two manual-only GitHub Actions workflows are being added: focused Python security/executor tests in DGM-MAT, and dependency-free Node syntax/contract checks for the cockpit. They are deliberately `workflow_dispatch` only to avoid spending Actions minutes on every push.
 - These additions are not yet runtime-verified. A successful GitHub Actions run and PC end-to-end test remain required before merge/activation.
+
+
+## Automated test entry points — 2026-10-16
+
+A manual-only workflow is available at `.github/workflows/governed-executor-tests.yml`. It runs the focused executor, audit and API-auth/security tests and is intentionally not triggered by pushes or pull requests. It has been committed to the feature branch but has **not** been dispatched in this session. Do not treat the tests as passing until the workflow run is observed as successful.
