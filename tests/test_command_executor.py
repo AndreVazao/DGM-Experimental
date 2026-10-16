@@ -45,7 +45,9 @@ def test_git_status_requires_target(tmp_path):
 def test_git_target_must_be_inside_allowed_root(tmp_path):
     allowed = tmp_path / "allowed"
     allowed.mkdir()
-    outside = make_repo(tmp_path / "outside-parent")
+    outside_parent = tmp_path / "outside-parent"
+    outside_parent.mkdir()
+    outside = make_repo(outside_parent)
     executor = CommandExecutor(allowed_roots=[allowed], which=lambda name: "/usr/bin/git")
     with pytest.raises(CommandDenied):
         executor.execute("git.status", target_path=str(outside))
@@ -54,9 +56,11 @@ def test_git_target_must_be_inside_allowed_root(tmp_path):
 def test_git_status_uses_no_shell_and_structured_args(tmp_path):
     repo = make_repo(tmp_path)
     calls = []
+
     def runner(argv, **kwargs):
         calls.append((argv, kwargs))
         return FakeCompleted(0, "## feature/test", "")
+
     executor = CommandExecutor(allowed_roots=[tmp_path], runner=runner, which=lambda name: "/usr/bin/git")
     result = executor.execute("git.status", target_path=str(repo))
     assert result["status"] == "passed"
@@ -64,21 +68,23 @@ def test_git_status_uses_no_shell_and_structured_args(tmp_path):
     assert calls[0][0][-3:] == ["status", "--short", "--branch"]
 
 
-def test_output_is_bounded(tmp_path):
+def test_output_is_bounded_for_stdout_and_stderr(tmp_path):
     repo = make_repo(tmp_path)
     executor = CommandExecutor(
         allowed_roots=[tmp_path],
-        runner=lambda *a, **k: FakeCompleted(stdout="x" * 5000),
+        runner=lambda *a, **k: FakeCompleted(stdout="x" * 5000, stderr="y" * 5000),
         which=lambda name: "/usr/bin/git",
         output_limit=512,
     )
     result = executor.execute("git.status", target_path=str(repo))
     assert len(result["stdout"]) == 512
+    assert len(result["stderr"]) == 512
 
 
 def test_timeout_is_reported(tmp_path):
     def timeout_runner(*args, **kwargs):
         raise subprocess.TimeoutExpired(args[0], 1, output="partial")
+
     executor = CommandExecutor(allowed_roots=[tmp_path], runner=timeout_runner, which=lambda name: "/usr/bin/git")
     repo = make_repo(tmp_path)
     result = executor.execute("git.status", target_path=str(repo))
@@ -86,12 +92,13 @@ def test_timeout_is_reported(tmp_path):
     assert result["returncode"] is None
 
 
-
 def test_claude_status_is_read_only_version_probe(tmp_path):
     calls = []
+
     def runner(argv, **kwargs):
         calls.append((argv, kwargs))
         return FakeCompleted(0, "2.1.112", "")
+
     executor = CommandExecutor(
         allowed_roots=[tmp_path], runner=runner,
         which=lambda name: "/tools/claude" if name == "claude" else None,
@@ -112,3 +119,48 @@ def test_ollama_missing_is_reported_without_starting_process(tmp_path):
     result = executor.execute("ollama.status")
     assert result["status"] == "unavailable"
     assert calls == []
+
+
+def test_system_summary_uses_fixed_powershell_script_and_no_shell(tmp_path):
+    calls = []
+
+    def runner(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return FakeCompleted(0, '{"PowerShell":"5.1"}', "")
+
+    executor = CommandExecutor(
+        allowed_roots=[tmp_path], runner=runner,
+        which=lambda name: "/windows/powershell.exe" if name == "powershell" else None,
+    )
+    result = executor.execute("system.summary")
+    assert result["status"] == "passed"
+    assert calls[0][0][:5] == [
+        "/windows/powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive", "-Command"
+    ]
+    assert "PowerShell=$PSVersionTable.PSVersion.ToString()" in calls[0][0][5]
+    assert calls[0][1]["shell"] is False
+
+
+def test_no_existing_allowed_root_fails_closed(tmp_path):
+    missing_root = tmp_path / "not-created"
+    executor = CommandExecutor(
+        allowed_roots=[missing_root],
+        runner=lambda *a, **k: pytest.fail("runner must not be invoked"),
+        which=lambda name: "/tools/claude" if name == "claude" else None,
+    )
+    with pytest.raises(CommandDenied, match="No configured allowed root exists"):
+        executor.execute("claude.status")
+
+
+def test_os_error_message_is_not_returned(tmp_path):
+    def failing_runner(*args, **kwargs):
+        raise OSError("sensitive local path C:/Users/person/private.txt")
+
+    executor = CommandExecutor(
+        allowed_roots=[tmp_path], runner=failing_runner,
+        which=lambda name: "/tools/claude" if name == "claude" else None,
+    )
+    result = executor.execute("claude.status")
+    assert result["status"] == "failed"
+    assert result["stderr"] == "OSError"
+    assert "private.txt" not in result["stderr"]
