@@ -22,7 +22,7 @@ class CommandSpec:
 
 
 CATALOG: tuple[CommandSpec, ...] = (
-    CommandSpec("system.summary", "Read Windows/host and Python runtime summary", "READ"),
+    CommandSpec("system.summary", "Read Windows/host and PowerShell runtime summary", "READ"),
     CommandSpec("process.top", "List a bounded sample of processes", "READ"),
     CommandSpec("git.status", "Read Git status for an authorized repository path", "READ", True),
     CommandSpec("ollama.status", "Check Ollama CLI availability and installed models", "READ"),
@@ -94,7 +94,7 @@ class CommandExecutor:
             argv = self._powershell_argv(
                 "$ErrorActionPreference='Stop'; "
                 "[pscustomobject]@{OS=[System.Environment]::OSVersion.VersionString; "
-                "Python=$PSVersionTable.PSVersion.ToString(); "
+                "PowerShell=$PSVersionTable.PSVersion.ToString(); "
                 "Computer=$env:COMPUTERNAME} | ConvertTo-Json -Compress"
             )
         elif command_id == "process.top":
@@ -136,7 +136,8 @@ class CommandExecutor:
             stderr = exc.stderr.decode("utf-8", "replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
             return self._result(command_id, "timeout", None, str(stdout), str(stderr), started)
         except OSError as exc:
-            return self._result(command_id, "failed", None, "", f"{type(exc).__name__}: {exc}", started)
+            # Return only the exception class; OS messages may disclose local paths or details.
+            return self._result(command_id, "failed", None, "", type(exc).__name__, started)
 
     def _validate_target(self, raw: str) -> Path:
         target = self._normalize_path(raw)
@@ -156,7 +157,7 @@ class CommandExecutor:
         for root in self.allowed_roots:
             if root.exists() and root.is_dir():
                 return root
-        return Path.cwd()
+        raise CommandDenied("No configured allowed root exists; refusing to use an implicit working directory.")
 
     def _powershell_argv(self, script: str) -> list[str]:
         executable = self.which("powershell") or self.which("pwsh")
