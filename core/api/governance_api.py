@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from core.repository_intelligence.portfolio_auditor import RepositoryAuditEngine
 from core.self_healing.self_repair_engine import SelfRepairEngine
@@ -85,8 +85,10 @@ def analyze_conversation(request: ConversationRequest):
 
 
 class CommandRunRequest(BaseModel):
-    command_id: str
-    target_path: str | None = None
+    command_id: str = Field(min_length=1, max_length=100)
+    target_path: str | None = Field(default=None, max_length=4096)
+
+    model_config = ConfigDict(extra="forbid")
 
 
 @router.get("/commands/catalog")
@@ -140,7 +142,6 @@ def run_governed_command(payload: CommandRunRequest, request: Request):
             returncode=result.get("returncode"),
         )
     except (AuditWriteError, ValueError):
-        # Do not claim a fully audited result when durable completion metadata failed.
         raise HTTPException(
             status_code=503,
             detail="Command may have run, but its completion audit could not be persisted; verify before retrying.",
