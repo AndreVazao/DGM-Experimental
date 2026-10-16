@@ -149,7 +149,10 @@ class CommandExecutor:
             return self._result(command_id, "failed", None, "", type(exc).__name__, started)
 
     def _validate_target(self, raw: str) -> Path:
-        target = self._normalize_path(raw)
+        try:
+            target = self._normalize_path(raw)
+        except (OSError, RuntimeError, ValueError) as exc:
+            raise CommandDenied("Target path is invalid.") from exc
         if not target.exists() or not target.is_dir():
             raise CommandDenied("Target must be an existing directory.")
         if not (target / ".git").exists() and not (target / ".git").is_file():
