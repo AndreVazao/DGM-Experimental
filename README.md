@@ -1,18 +1,18 @@
-# DGM-MAT\n\nDGM-MAT is the central engineering intelligence and orchestration system of the DevOps God Mode ecosystem.\n\n## Current role\n\nDGM-MAT is the current authority for the God Mode / AI-DevOps / multi-agent engineering family.\n\nIt is responsible for:\n- repository and workspace intelligence;\n- evidence-first technical audits;\n- architecture and dependency analysis;\n- project/grouping proposals;\n- multi-agent engineering orchestration;\n- controlled execution and approvals;\n- runtime health and reality state;\n- controlled self-diagnosis and self-repair;\n- extracting useful concepts from legacy, lab and upstream repositories without blindly merging them.\n\n## Operating principle\n\nThe system must operate in this order:\n\nOBSERVE -> AUDIT -> CLASSIFY -> PLAN -> APPROVE WHEN REQUIRED -> APPLY -> VALIDATE -> RECORD\n\nAudits are read-only. Structural operations such as moving, renaming, deleting, regrouping repositories, changing remotes, committing, pushing or triggering external workflows are never performed implicitly by the audit layer.\n\n## Repository intelligence\n\nDGM-MAT now contains its own evidence-first portfolio auditor:\n\n- core/repository_intelligence/portfolio_auditor.py\n- local Git state and origin inspection;\n- repository metadata and commit count;\n- language/manifest detection;\n- README/purpose analysis;\n- classification and logical project grouping;\n- protected-path detection;\n- risks and recommended action;\n- read-only GitHub metadata lookup.\n\nThe canonical workspace is:\n\nC:\\ProgramasGodMode\n\nThe frozen DGM-MAT-FULL-MIRROR is protected and must remain untouched.\n\n## Self-repair\n\nControlled self-repair lives in:\n\ncore/self_healing/self_repair_engine.py\n\nThe repair engine separates diagnosis from mutation. Safe self-tests may run automatically; structural or authority-changing operations remain approval-gated.\n\n## Governance API\n\nThe running DGM-MAT API exposes:\n\n- GET /governance/audit/self\n- GET /governance/audit/workspace\n- GET /governance/repair/self/plan\n- POST /governance/repair/self/apply\n\nThe API is intended to become the cockpit/mission entry point for future automated audit, repair and portfolio organization workflows.\n\n## Ecosystem boundary\n\nDGM-MAT may absorb knowledge, architecture, techniques and validated snippets from upstream, cloned, legacy and lab repositories.\n\nThe default flow is:\n\nUPSTREAM / CLONE -> STUDY -> AUDIT -> EXTRACT CONCEPT -> REIMPLEMENT / ADAPT -> VALIDATE -> PRODUCT\n\nWhole-repository copying is not the default.\n\n## Family scope\n\nAll God Mode, AI DevOps and multi-agent engineering/programming work belongs to the DGM-MAT family.\n\nIndependent product families such as VAZÃO EVSE, ProVentil, Automotive and Sovereign Trader remain separate products even when they reuse DGM-MAT technology.\n\n## Development policy\n\n- stability > features;\n- reality > assumptions;\n- manual control > destructive automation;\n- evidence before restructuring;\n- small validated changes;\n- every meaningful architectural conclusion is recorded in andreos-memory.
+# DGM-Experimental — Legacy Snapshot / Review Only
 
-## Autonomous engineering mission
+## Status
+This repository contains a large historical DGM-MAT-like tree and directories named after multiple satellite repositories. It is **not** the canonical brain and must not be treated as a live satellite or automatically cloned into the DGM-MAT workspace.
 
-DGM-MAT is intended to operate as the user's autonomous engineering counterpart: ingesting AI conversations, classifying them by project, extracting code with provenance, checking code against context, consolidating duplicate implementations, detecting syntax/structural defects, auditing incomplete repositories, implementing approved repairs, testing, validating, and recording outcomes in persistent memory.
+## Authority
+The canonical brain is `AndreVazao/DGM-MAT`. The canonical cross-project memory and repository inventory is `AndreVazao/andreos-memory`. The dedicated external-code laboratory is `AndreVazao/DGM-MAT-Labs`.
 
-Conversation intelligence is implemented under `core/conversation_intelligence/` and exposed through `POST /governance/conversations/analyze`.
+## Required handling
+- Do not develop new features here by default.
+- Do not sync this repository wholesale into DGM-MAT.
+- Do not automatically clone the satellite-looking directories found in this tree.
+- Compare unique commits/files with canonical DGM-MAT before deciding whether anything is worth recovering.
+- Preserve history and unique work until that audit is complete.
+- If no unique useful work remains after comparison, mark this repository for manual archival/deletion review.
 
-Microsoft Project Telescope is installed locally as an observability source for AI coding agents and MCP activity. Vercel project `dgm-mat-rendezvous` provides node discovery so the home PC and mobile cockpit can find each other without manually entering IP addresses.
-
-
-## Diretiva primária vigente — 2026-10-10
-
-A prioridade operacional atual é **recuperar e reorganizar primeiro a memória das conversas e a documentação**, antes de novo trabalho de engenharia não urgente. DGM-MAT deve separar sempre pedidos do utilizador, respostas/propostas das IAs, decisões vigentes e realidade verificada. Reconstrói a evolução temporal, atualiza o contexto quando pedidos posteriores substituem soluções antigas, preserva a razão e a proveniência e impede que conteúdo LEGACY/SUPERSEDED volte a orientar o trabalho.
-
-Norma completa: [DGM-MAT_PRIMARY_MISSION_AND_EVOLVING_TRUTH_2026-10-10.md](docs/DGM-MAT_PRIMARY_MISSION_AND_EVOLVING_TRUTH_2026-10-10.md).
-
-Não apagar documentação histórica em lote: inventariar, classificar, ligar sucessores e criar backup antes de qualquer remoção definitiva. A prioridade antiga de engenharia continua válida apenas quando compatível com esta diretiva.
+## Why it exists
+This repository is retained temporarily as a historical/recovery source only. Its README and contents are not authoritative for current architecture decisions.
